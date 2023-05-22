@@ -47,7 +47,7 @@ function login() {
         // Login bem-sucedido
         alert('Login realizado com sucesso! Redirecionando para o chat...');
         // Aqui você pode redirecionar o usuário para outro site (chat), por exemplo:
-        window.location.href = 'https://www.example.com/chat';
+        window.location.href = 'https://fistofdarkness.github.io/Chat'/;
     } else {
         // Login inválido
         alert('Usuário ou senha inválidos!');
