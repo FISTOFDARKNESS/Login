@@ -18,11 +18,12 @@ messageInput.addEventListener('input', enableSendButton);
 document.getElementById('emailForm').addEventListener('submit', function(event) {
     event.preventDefault(); // Prevent form from refreshing the page
 
-    const emailData = {
-        subject: subjectInput.value.trim(),
-        message: messageInput.value.trim(),
-        to_email: 'kaioadrik08@gmail.com' // Replace with your Gmail address
-    };
+   const emailData = {
+    to_email: 'kaioadrik08@gmail.com',  // Update if dynamic
+    subject: subjectInput.value.trim(),
+    message: messageInput.value.trim()
+};
+
 
     // Reset status message
     statusDiv.textContent = 'Sending...';
