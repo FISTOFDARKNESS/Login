@@ -44,7 +44,7 @@ document.getElementById('emailForm').addEventListener('submit', function(event) 
   // Send the email using EmailJS with the public key
   emailjs.send('service_774xxto', 'template_i2dsm05', emailData)  // Replace with your Service ID and Template ID
     .then(function(response) {
-      console.log('Success:', response);
+      console.log('Success:', response
       // Success - Show green message
       statusDiv.textContent = 'Message sent successfully!';
       statusDiv.classList.remove('hidden');
