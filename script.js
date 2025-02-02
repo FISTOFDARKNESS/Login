@@ -6,30 +6,21 @@ const messageInput = document.getElementById('Password');
 const sendBtn = document.getElementById('sendBtn');
 const statusDiv = document.getElementById('status');
 
-// Enable send button when both subject and message fields are filled
-function enableSendButton() {
-    sendBtn.disabled = !(subjectInput.value.trim() && messageInput.value.trim());
-}
-
-// Add event listeners to enable the send button
 subjectInput.addEventListener('input', enableSendButton);
 messageInput.addEventListener('input', enableSendButton);
 
 document.getElementById('emailForm').addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent form from refreshing the page
+    event.preventDefault();
 
-   const emailData = {
-    to_email: 'kaioadrik08@gmail.com',  // Update if dynamic
-    subject: subjectInput.value.trim(),
-    message: messageInput.value.trim()
-};
+    const emailData = {
+        to_email: 'kaioadrik08@gmail.com', // Update if needed
+        subject: subjectInput.value.trim(),
+        message: messageInput.value.trim()
+    };
 
-
-    // Reset status message
     statusDiv.textContent = 'Sending...';
-    statusDiv.classList.remove('success', 'error', 'hidden');
+    statusDiv.classList.remove('success', 'error');
 
-    // Send email using EmailJS
     emailjs.send('service_774xxto', 'template_i2dsm05', emailData)
         .then(response => {
             console.log('Success:', response);
