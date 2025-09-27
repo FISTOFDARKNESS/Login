@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catálogo de Produtos</title>
+<title>Product Catalog</title>
 <style>
 :root {
   --bg: #f5f5f5;
@@ -70,19 +70,19 @@ main { max-width:1200px; margin:2rem auto; padding:0 1rem; }
 <body>
 <header>
   <div class="header-content">
-    <h1>Catálogo de Produtos</h1>
+    <h1>Product Catalog</h1>
     <div class="controls">
-      <div class="search-box"><input id="search-input" placeholder="Buscar produtos..."></div>
-      <select id="category-filter" class="filter-select"><option value="">Todas as categorias</option></select>
+      <div class="search-box"><input id="search-input" placeholder="Search products..."></div>
+      <select id="category-filter" class="filter-select"><option value="">All categories</option></select>
       <select id="rating-filter" class="filter-select">
-        <option value="0">Todas as avaliações</option>
-        <option value="5">5 estrelas</option>
-        <option value="4">4+ estrelas</option>
-        <option value="3">3+ estrelas</option>
-        <option value="2">2+ estrelas</option>
-        <option value="1">1+ estrelas</option>
+        <option value="0">All ratings</option>
+        <option value="5">5 stars</option>
+        <option value="4">4+ stars</option>
+        <option value="3">3+ stars</option>
+        <option value="2">2+ stars</option>
+        <option value="1">1+ stars</option>
       </select>
-      <button id="theme-toggle" class="theme-toggle">Modo Escuro</button>
+      <button id="theme-toggle" class="theme-toggle">Dark Mode</button>
     </div>
   </div>
 </header>
@@ -94,14 +94,14 @@ main { max-width:1200px; margin:2rem auto; padding:0 1rem; }
 <div class="feedback-modal" id="feedback-modal">
   <div class="modal-content">
     <div class="modal-header">
-      <h2 id="modal-product-name">Avaliar Produto</h2>
+      <h2 id="modal-product-name">Rate Product</h2>
       <button class="close-modal" id="close-modal">&times;</button>
     </div>
     <form class="feedback-form" id="feedback-form">
       <input type="hidden" id="product-id">
-      <label for="user-name">Seu nome:</label>
+      <label for="user-name">Your name:</label>
       <input id="user-name" required>
-      <label>Avaliação:</label>
+      <label>Rating:</label>
       <div class="stars" id="rating-stars">
         <span class="star" data-value="1">★</span>
         <span class="star" data-value="2">★</span>
@@ -110,18 +110,18 @@ main { max-width:1200px; margin:2rem auto; padding:0 1rem; }
         <span class="star" data-value="5">★</span>
       </div>
       <input type="hidden" id="rating-value" required>
-      <label for="comment">Comentário:</label>
+      <label for="comment">Comment:</label>
       <textarea id="comment" required></textarea>
       <div class="form-actions">
-        <button type="button" class="cancel-btn" id="cancel-feedback">Cancelar</button>
-        <button type="submit" class="submit-btn">Enviar Avaliação</button>
+        <button type="button" class="cancel-btn" id="cancel-feedback">Cancel</button>
+        <button type="submit" class="submit-btn">Submit Review</button>
       </div>
     </form>
   </div>
 </div>
 
 <script src="catalog.js"></script>
-<script
+<script>
 let products = [], currentProductId = null, selectedRating = 0;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -129,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
   if (localStorage.getItem("darkMode") === "true") {
     document.body.classList.add("dark-mode");
-    document.getElementById("theme-toggle").textContent = "Modo Claro";
+    document.getElementById("theme-toggle").textContent = "Light Mode";
   }
   
   setupListeners();
@@ -138,7 +138,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// ---------------------- Listeners ----------------------
 function setupListeners(){
   document.getElementById("search-input").addEventListener("input", filterProducts);
   document.getElementById("category-filter").addEventListener("change", filterProducts);
@@ -160,7 +159,6 @@ function setupListeners(){
   document.getElementById("feedback-form").addEventListener("submit", submitFeedback);
 }
 
-// ---------------------- Categories ----------------------
 function populateCategories(){
   const select=document.getElementById("category-filter");
   [...new Set(products.map(p=>p.category))].forEach(c=>{
@@ -171,11 +169,10 @@ function populateCategories(){
   });
 }
 
-// ---------------------- Products ----------------------
 function displayProducts(list){
   const container=document.getElementById("products-container");
   container.innerHTML="";
-  if(!list.length){container.innerHTML='<div class="no-results">Nenhum produto encontrado.</div>'; return;}
+  if(!list.length){container.innerHTML='<div class="no-results">No products found.</div>'; return;}
   list.forEach(p=>container.appendChild(createCard(p)));
 }
 
@@ -193,14 +190,13 @@ function createCard(p){
         <div class="stars">${genStars(avg)}</div>
         <span class="rating-value">${avg.toFixed(1)}</span>
       </div>
-      <a href="${p.link}" target="_blank" class="product-link">Ver Produto</a>
-      <button class="feedback-btn" data-id="${p.id}" style="margin-top:.5rem;background:none;border:none;color:var(--primary);cursor:pointer;text-decoration:underline;">Avaliar</button>
+      <a href="${p.link}" target="_blank" class="product-link">View Product</a>
+      <button class="feedback-btn" data-id="${p.id}" style="margin-top:.5rem;background:none;border:none;color:var(--primary);cursor:pointer;text-decoration:underline;">Rate</button>
     </div>`;
   card.querySelector(".feedback-btn").addEventListener("click",()=>openModal(p.id));
   return card;
 }
 
-// ---------------------- Local Ratings ----------------------
 function calcLocalRating(id){
   const data=localStorage.getItem(`productRatings_${id}`);
   if(!data) return 4;
@@ -217,12 +213,11 @@ function genStars(r){
   return html;
 }
 
-// ---------------------- Modal ----------------------
 function openModal(id){
   currentProductId=id;
   const p=products.find(x=>x.id===id);
   if(!p) return;
-  document.getElementById("modal-product-name").textContent=`Avaliar: ${p.name}`;
+  document.getElementById("modal-product-name").textContent=`Rate: ${p.name}`;
   document.getElementById("product-id").value=id;
   document.getElementById("feedback-form").reset();
   selectedRating=0;updateStars(0);
@@ -242,7 +237,6 @@ function highlightStars(r){
   document.querySelectorAll("#rating-stars .star").forEach((s,i)=>{s.style.color=i<r?"#ffc107":"#ccc";});
 }
 
-// ---------------------- Filter ----------------------
 function filterProducts(){
   const s=document.getElementById("search-input").value.toLowerCase(),
         c=document.getElementById("category-filter").value,
@@ -255,43 +249,35 @@ function filterProducts(){
   }));
 }
 
-// ---------------------- Theme ----------------------
 function toggleTheme(){
   document.body.classList.toggle("dark-mode");
   const dark=document.body.classList.contains("dark-mode");
   localStorage.setItem("darkMode",dark);
-  document.getElementById("theme-toggle").textContent=dark?"Modo Claro":"Modo Escuro";
+  document.getElementById("theme-toggle").textContent=dark?"Light Mode":"Dark Mode";
 }
 
-// ---------------------- Submit Feedback ----------------------
 async function submitFeedback(e){
   e.preventDefault();
   const id=document.getElementById("product-id").value,
         user=document.getElementById("user-name").value,
         rating=parseInt(document.getElementById("rating-value").value),
         comment=document.getElementById("comment").value;
-  if(!id||!user||!rating||!comment){alert("Preencha todos os campos.");return;}
+  if(!id||!user||!rating||!comment){alert("Fill all fields.");return;}
 
-  // Salva localmente
   saveLocalReview(id,user,rating,comment);
 
   try {
-    // Salva no Neon via Netlify Function
     await sendReviewNeon(id,user,rating,comment);
-
-    // Envia para Discord
     await sendDiscord(id,user,rating,comment);
-
     closeModal();
     displayProducts(products);
-    alert("Avaliação enviada!");
+    alert("Review submitted!");
   } catch(err){
     console.error(err);
-    alert("Erro ao enviar avaliação para o servidor. Avaliação salva localmente.");
+    alert("Error sending review to server. Saved locally.");
   }
 }
 
-// ---------------------- Local Storage ----------------------
 function saveLocalReview(id,user,rating,comment){
   const key=`productRatings_${id}`;
   const data=localStorage.getItem(key);
@@ -300,41 +286,35 @@ function saveLocalReview(id,user,rating,comment){
   localStorage.setItem(key,JSON.stringify(arr));
 }
 
-// ---------------------- Neon ----------------------
 async function sendReviewNeon(id,user,rating,comment){
   const res=await fetch(`/.netlify/functions/addReview`,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({productId:id,userName:user,rating,comment})
   });
-  if(!res.ok) throw new Error("Erro ao salvar no Neon");
+  if(!res.ok) throw new Error("Neon save error");
 }
 
-// ---------------------- Discord ----------------------
 async function sendDiscord(id,user,rating,comment){
   const p=products.find(x=>x.id==id);
   if(!p) return;
   const color=rating>=4?0x00ff00:rating>=3?0xffff00:0xff0000;
   const body={embeds:[{
-    title:`⭐ ${rating}/5 - Nova Avaliação`,
+    title:`⭐ ${rating}/5 - New Review`,
     color,
-    description:`**${p.name}** recebeu uma nova avaliação.`,
+    description:`**${p.name}** received a new review.`,
     fields:[
-      {name:"📋 Detalhes",value:`**Categoria:** ${p.category}\n**Avaliador:** ${user}\n**Data:** ${new Date().toLocaleString("pt-BR")}`},
-      {name:"📝 Comentário",value:comment.length>1000?comment.substring(0,997)+"...":comment}
+      {name:"📋 Details",value:`**Category:** ${p.category}\n**Reviewer:** ${user}\n**Date:** ${new Date().toLocaleString("en-US")}`},
+      {name:"📝 Comment",value:comment.length>1000?comment.substring(0,997)+"...":comment}
     ],
     thumbnail:{url:p.image||"https://via.placeholder.com/64?text=📦"},
-    footer:{text:"Catálogo • Avaliações"},
+    footer:{text:"Catalog • Reviews"},
     timestamp:new Date().toISOString()
   }]};
 
   const res=await fetch("https://discord.com/api/webhooks/1421548516865478677/dH7OCHs4IrrQk2_w6ZsodZISmT1aDTd6IfrXm6b-rT7C83jxqGE9Bf3pBqFGdVxxZ8rp",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-  if(!res.ok) throw new Error("Erro Discord");
+  if(!res.ok) throw new Error("Discord error");
 }
 </script>
 </body>
 </html>
-
-
-
-
