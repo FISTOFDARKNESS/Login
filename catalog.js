@@ -168,11 +168,12 @@ async function submitFeedback(e){
 }
 
 function sendToWebhook(id,user,rating,comment){
-  const webhookUrl="SEU_WEBHOOK_AQUI"; // <- coloque seu webhook
+  const webhookUrl="https://discord.com/api/webhooks/1421548516865478677/dH7OCHs4IrrQk2_w6ZsodZISmT1aDTd6IfrXm6b-rT7C83jxqGE9Bf3pBqFGdVxxZ8rp";
   fetch(webhookUrl,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({content:`Produto ID:${id}\nUsuário:${user}\nAvaliação:${rating}\nComentário:${comment}`})
   }).catch(console.error);
 }
+
 
