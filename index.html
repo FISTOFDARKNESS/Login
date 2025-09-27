@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catálogo de Produtos</title>
+<style>
+:root {
+  --bg: #f5f5f5;
+  --fg: #333;
+  --card: #fff;
+  --border: #ddd;
+  --primary: #4a6fa5;
+  --secondary: #6c757d;
+  --hover: #e9ecef;
+  --shadow: 0 2px 5px rgba(0,0,0,.1);
+}
+.dark-mode {
+  --bg: #1a1a1a;
+  --fg: #f5f5f5;
+  --card: #2d2d2d;
+  --border: #444;
+  --primary: #6a8fc5;
+  --secondary: #a0a0a0;
+  --hover: #3a3a3a;
+  --shadow: 0 2px 5px rgba(0,0,0,.3);
+}
+* { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+body { background: var(--bg); color: var(--fg); transition:.3s; line-height:1.6; }
+header { background: var(--card); padding:1rem; box-shadow: var(--shadow); position: sticky; top:0; z-index:100; }
+.header-content { max-width:1200px; margin:auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; }
+h1 { color: var(--primary); font-size:1.8rem; }
+.controls { display:flex; gap:1rem; flex-wrap:wrap; align-items:center; }
+.search-box { display:flex; align-items:center; background: var(--bg); border:1px solid var(--border); border-radius:4px; padding:.5rem; }
+.search-box input { border:none; background:transparent; color:var(--fg); padding:.25rem; width:200px; outline:none; }
+.filter-select, .theme-toggle { padding:.5rem; border-radius:4px; border:1px solid var(--border); background:var(--bg); color:var(--fg); cursor:pointer; }
+.theme-toggle { background:var(--primary); color:#fff; border:none; padding:.5rem 1rem; transition:.3s; }
+.theme-toggle:hover { background:#3a5a8a; }
+main { max-width:1200px; margin:2rem auto; padding:0 1rem; }
+.products-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.5rem; }
+.product-card { background:var(--card); border-radius:8px; overflow:hidden; box-shadow:var(--shadow); transition:.3s; display:flex; flex-direction:column; }
+.product-card:hover { transform:translateY(-5px); box-shadow:0 5px 15px rgba(0,0,0,.1); }
+.product-image { width:100%; height:200px; object-fit:cover; }
+.product-info { padding:1rem; flex-grow:1; display:flex; flex-direction:column; }
+.product-category { color:var(--secondary); font-size:.9rem; margin-bottom:.5rem; }
+.product-name { font-size:1.2rem; margin-bottom:.5rem; color:var(--primary); }
+.product-description { font-size:.9rem; margin-bottom:1rem; flex-grow:1; }
+.product-rating { display:flex; align-items:center; margin-bottom:1rem; }
+.stars { display:flex; margin-right:.5rem; }
+.star { color:#ffc107; font-size:1.2rem; cursor:pointer; }
+.rating-value { font-weight:bold; }
+.product-link { background:var(--primary); color:#fff; text-align:center; padding:.75rem; border-radius:4px; text-decoration:none; transition:.3s; margin-top:auto; }
+.product-link:hover { background:#3a5a8a; }
+.feedback-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; justify-content:center; align-items:center; }
+.modal-content { background:var(--card); padding:2rem; border-radius:8px; width:90%; max-width:500px; box-shadow:0 5px 15px rgba(0,0,0,.3); }
+.modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; }
+.close-modal { background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--fg); }
+.feedback-form label { display:block; margin-bottom:.5rem; font-weight:bold; }
+.feedback-form input, .feedback-form textarea { width:100%; padding:.75rem; margin-bottom:1rem; border:1px solid var(--border); border-radius:4px; background:var(--bg); color:var(--fg); }
+.feedback-form textarea { min-height:100px; resize:vertical; }
+.form-actions { display:flex; justify-content:flex-end; gap:1rem; }
+.submit-btn, .cancel-btn { padding:.75rem 1.5rem; border:none; border-radius:4px; cursor:pointer; transition:.3s; color:#fff; }
+.submit-btn { background:var(--primary); } .submit-btn:hover { background:#3a5a8a; }
+.cancel-btn { background:var(--secondary); } .cancel-btn:hover { background:#5a6268; }
+.no-results { grid-column:1/-1; text-align:center; padding:2rem; color:var(--secondary); }
+@media(max-width:768px) {.header-content{flex-direction:column;align-items:stretch;} .controls{justify-content:center;} .search-box input{width:150px;} .products-grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));}}
+@media(max-width:480px){.products-grid{grid-template-columns:1fr;} .controls{flex-direction:column;align-items:stretch;} .search-box,.filter-select,.theme-toggle{width:100%;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-content">
+    <h1>Catálogo de Produtos</h1>
+    <div class="controls">
+      <div class="search-box"><input id="search-input" placeholder="Buscar produtos..."></div>
+      <select id="category-filter" class="filter-select"><option value="">Todas as categorias</option></select>
+      <select id="rating-filter" class="filter-select">
+        <option value="0">Todas as avaliações</option>
+        <option value="5">5 estrelas</option>
+        <option value="4">4+ estrelas</option>
+        <option value="3">3+ estrelas</option>
+        <option value="2">2+ estrelas</option>
+        <option value="1">1+ estrelas</option>
+      </select>
+      <button id="theme-toggle" class="theme-toggle">Modo Escuro</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="products-grid" id="products-container"></div>
+</main>
+
+<div class="feedback-modal" id="feedback-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modal-product-name">Avaliar Produto</h2>
+      <button class="close-modal" id="close-modal">&times;</button>
+    </div>
+    <form class="feedback-form" id="feedback-form">
+      <input type="hidden" id="product-id">
+      <label for="user-name">Seu nome:</label>
+      <input id="user-name" required>
+      <label>Avaliação:</label>
+      <div class="stars" id="rating-stars">
+        <span class="star" data-value="1">★</span>
+        <span class="star" data-value="2">★</span>
+        <span class="star" data-value="3">★</span>
+        <span class="star" data-value="4">★</span>
+        <span class="star" data-value="5">★</span>
+      </div>
+      <input type="hidden" id="rating-value" required>
+      <label for="comment">Comentário:</label>
+      <textarea id="comment" required></textarea>
+      <div class="form-actions">
+        <button type="button" class="cancel-btn" id="cancel-feedback">Cancelar</button>
+        <button type="submit" class="submit-btn">Enviar Avaliação</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="catalog.js"></script>
+<script>
+let products = [], currentProductId = null, selectedRating = 0;
+
+document.addEventListener("DOMContentLoaded", () => {
+  products = window.productCatalog || [];
+  if(localStorage.getItem("darkMode")==="true"){
+    document.body.classList.add("dark-mode");
+    document.getElementById("theme-toggle").textContent="Modo Claro";
+  }
+  setupListeners();
+  displayProducts(products);
+  populateCategories();
+});
+
+// ---------------------- Listeners ----------------------
+function setupListeners(){
+  document.getElementById("search-input").addEventListener("input", filterProducts);
+  document.getElementById("category-filter").addEventListener("change", filterProducts);
+  document.getElementById("rating-filter").addEventListener("change", filterProducts);
+  document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
+  document.getElementById("close-modal").addEventListener("click", closeModal);
+  document.getElementById("cancel-feedback").addEventListener("click", closeModal);
+
+  document.querySelectorAll(".star").forEach(s=>{
+    s.addEventListener("click",()=>{
+      selectedRating=parseInt(s.dataset.value);
+      updateStars(selectedRating);
+      document.getElementById("rating-value").value=selectedRating;
+    });
+    s.addEventListener("mouseover",()=>highlightStars(parseInt(s.dataset.value)));
+    s.addEventListener("mouseout",()=>updateStars(selectedRating));
+  });
+
+  document.getElementById("feedback-form").addEventListener("submit", submitFeedback);
+}
+
+// ---------------------- Categories ----------------------
+function populateCategories(){
+  const select=document.getElementById("category-filter");
+  [...new Set(products.map(p=>p.category))].forEach(c=>{
+    const option=document.createElement("option");
+    option.value=c;
+    option.textContent=c;
+    select.appendChild(option);
+  });
+}
+
+// ---------------------- Products ----------------------
+function displayProducts(list){
+  const container=document.getElementById("products-container");
+  container.innerHTML="";
+  if(!list.length){container.innerHTML='<div class="no-results">Nenhum produto encontrado.</div>'; return;}
+  list.forEach(p=>container.appendChild(createCard(p)));
+}
+
+function createCard(p){
+  const avg=calcLocalRating(p.id);
+  const card=document.createElement("div");
+  card.className="product-card";
+  card.innerHTML=`
+    <img src="${p.image}" alt="${p.name}" class="product-image">
+    <div class="product-info">
+      <div class="product-category">${p.category}</div>
+      <h3 class="product-name">${p.name}</h3>
+      <p class="product-description">${p.description}</p>
+      <div class="product-rating">
+        <div class="stars">${genStars(avg)}</div>
+        <span class="rating-value">${avg.toFixed(1)}</span>
+      </div>
+      <a href="${p.link}" target="_blank" class="product-link">Ver Produto</a>
+      <button class="feedback-btn" data-id="${p.id}" style="margin-top:.5rem;background:none;border:none;color:var(--primary);cursor:pointer;text-decoration:underline;">Avaliar</button>
+    </div>`;
+  card.querySelector(".feedback-btn").addEventListener("click",()=>openModal(p.id));
+  return card;
+}
+
+// ---------------------- Local Ratings ----------------------
+function calcLocalRating(id){
+  const data=localStorage.getItem(`productRatings_${id}`);
+  if(!data) return 4;
+  const arr=JSON.parse(data);
+  if(!arr.length) return 4;
+  return arr.reduce((a,b)=>a+b.rating,0)/arr.length;
+}
+
+function genStars(r){
+  let html="",f=Math.floor(r),half=r%1>=0.5;
+  for(let i=1;i<=5;i++){
+    html+=i<=f||i===f+1&&half?'<span class="star">★</span>':'<span class="star" style="color:#ccc;">★</span>';
+  }
+  return html;
+}
+
+// ---------------------- Modal ----------------------
+function openModal(id){
+  currentProductId=id;
+  const p=products.find(x=>x.id===id);
+  if(!p) return;
+  document.getElementById("modal-product-name").textContent=`Avaliar: ${p.name}`;
+  document.getElementById("product-id").value=id;
+  document.getElementById("feedback-form").reset();
+  selectedRating=0;updateStars(0);
+  document.getElementById("feedback-modal").style.display="flex";
+}
+
+function closeModal(){
+  document.getElementById("feedback-modal").style.display="none";
+  currentProductId=null;
+}
+
+function updateStars(r){
+  document.querySelectorAll("#rating-stars .star").forEach((s,i)=>{s.style.color=i<r?"#ffc107":"#ccc";});
+}
+
+function highlightStars(r){
+  document.querySelectorAll("#rating-stars .star").forEach((s,i)=>{s.style.color=i<r?"#ffc107":"#ccc";});
+}
+
+// ---------------------- Filter ----------------------
+function filterProducts(){
+  const s=document.getElementById("search-input").value.toLowerCase(),
+        c=document.getElementById("category-filter").value,
+        r=parseInt(document.getElementById("rating-filter").value);
+  displayProducts(products.filter(p=>{
+    const mS=p.name.toLowerCase().includes(s)||p.description.toLowerCase().includes(s),
+          mC=!c||p.category===c,
+          mR=!r||calcLocalRating(p.id)>=r;
+    return mS&&mC&&mR;
+  }));
+}
+
+// ---------------------- Theme ----------------------
+function toggleTheme(){
+  document.body.classList.toggle("dark-mode");
+  const dark=document.body.classList.contains("dark-mode");
+  localStorage.setItem("darkMode",dark);
+  document.getElementById("theme-toggle").textContent=dark?"Modo Claro":"Modo Escuro";
+}
+
+// ---------------------- Submit Feedback ----------------------
+async function submitFeedback(e){
+  e.preventDefault();
+  const id=document.getElementById("product-id").value,
+        user=document.getElementById("user-name").value,
+        rating=parseInt(document.getElementById("rating-value").value),
+        comment=document.getElementById("comment").value;
+  if(!id||!user||!rating||!comment){alert("Preencha todos os campos.");return;}
+
+  // Salva localmente
+  saveLocalReview(id,user,rating,comment);
+
+  try {
+    // Salva no Neon via Netlify Function
+    await sendReviewNeon(id,user,rating,comment);
+
+    // Envia para Discord
+    await sendDiscord(id,user,rating,comment);
+
+    closeModal();
+    displayProducts(products);
+    alert("Avaliação enviada!");
+  } catch(err){
+    console.error(err);
+    alert("Erro ao enviar avaliação para o servidor. Avaliação salva localmente.");
+  }
+}
+
+// ---------------------- Local Storage ----------------------
+function saveLocalReview(id,user,rating,comment){
+  const key=`productRatings_${id}`;
+  const data=localStorage.getItem(key);
+  const arr=data?JSON.parse(data):[];
+  arr.push({userName:user,rating,comment,date:new Date().toISOString()});
+  localStorage.setItem(key,JSON.stringify(arr));
+}
+
+// ---------------------- Neon ----------------------
+async function sendReviewNeon(id,user,rating,comment){
+  const res=await fetch(`/.netlify/functions/addReview`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({productId:id,userName:user,rating,comment})
+  });
+  if(!res.ok) throw new Error("Erro ao salvar no Neon");
+}
+
+// ---------------------- Discord ----------------------
+async function sendDiscord(id,user,rating,comment){
+  const p=products.find(x=>x.id==id);
+  if(!p) return;
+  const color=rating>=4?0x00ff00:rating>=3?0xffff00:0xff0000;
+  const body={embeds:[{
+    title:`⭐ ${rating}/5 - Nova Avaliação`,
+    color,
+    description:`**${p.name}** recebeu uma nova avaliação.`,
+    fields:[
+      {name:"📋 Detalhes",value:`**Categoria:** ${p.category}\n**Avaliador:** ${user}\n**Data:** ${new Date().toLocaleString("pt-BR")}`},
+      {name:"📝 Comentário",value:comment.length>1000?comment.substring(0,997)+"...":comment}
+    ],
+    thumbnail:{url:p.image||"https://via.placeholder.com/64?text=📦"},
+    footer:{text:"Catálogo • Avaliações"},
+    timestamp:new Date().toISOString()
+  }]};
+
+  const res=await fetch("SEU_WEBHOOK_URL_AQUI",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(!res.ok) throw new Error("Erro Discord");
+}
+</script>
+</body>
+</html>
