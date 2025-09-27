@@ -1,6 +1,6 @@
 // Produtos
 window.productCatalog = [
-  { id:1, name:"Designer Dashboard Pro", category:"Dashboard", description:"Dashboard profissional para designers.", image:"https://via.placeholder.com/300x200?text=Dashboard+Pro", link:"#"},
+  { id:1, name:"Designer Dashboard Pro", category:"Dashboard", description:"Dashboard profissional para designers.", image:"https://via.placeholder.com/300x200?text=Dashboard+Pro", link:"https://sketchfab.com/search?type=models"},
   { id:2, name:"Workspace Analytics Tool", category:"Analytics", description:"Ferramenta completa de análise.", image:"https://via.placeholder.com/300x200?text=Analytics+Tool", link:"#"},
   { id:3, name:"Modern Web Templates", category:"Templates", description:"Templates modernos para web.", image:"https://via.placeholder.com/300x200?text=Web+Templates", link:"#"}
 ];
@@ -175,3 +175,4 @@ function sendToWebhook(id,user,rating,comment){
     body:JSON.stringify({content:`Produto ID:${id}\nUsuário:${user}\nAvaliação:${rating}\nComentário:${comment}`})
   }).catch(console.error);
 }
+
