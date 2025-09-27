@@ -167,15 +167,23 @@ async function submitFeedback(e){
   alert("Avaliação enviada!");
 }
 
-function sendToWebhook(id,user,rating,comment){
-  const webhookUrl="https://discord.com/api/webhooks/1421548516865478677/dH7OCHs4IrrQk2_w6ZsodZISmT1aDTd6IfrXm6b-rT7C83jxqGE9Bf3pBqFGdVxxZ8rp";
-  fetch(webhookUrl,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({content:`Produto ID:${id}\nUsuário:${user}\nAvaliação:${rating}\nComentário:${comment}`})
-  }).catch(console.error);
+async function sendDiscord(id,user,rating,comment){
+  const p=products.find(x=>x.id==id);
+  if(!p) return;
+  const color=rating>=4?0x00ff00:rating>=3?0xffff00:0xff0000;
+  const body={embeds:[{
+    title:`⭐ ${rating}/5 - New Review`,
+    color,
+    description:`**${p.name}** received a new review.`,
+    fields:[
+      {name:"📋 Details",value:`**Category:** ${p.category}\n**Reviewer:** ${user}\n**Date:** ${new Date().toLocaleString("en-US")}`},
+      {name:"📝 Comment",value:comment.length>1000?comment.substring(0,997)+"...":comment}
+    ],
+    thumbnail:{url:p.image||"https://via.placeholder.com/64?text=📦"},
+    footer:{text:"Catalog • Reviews"},
+    timestamp:new Date().toISOString()
+  }]};
+
+  const res=await fetch("https://discord.com/api/webhooks/1421548516865478677/dH7OCHs4IrrQk2_w6ZsodZISmT1aDTd6IfrXm6b-rT7C83jxqGE9Bf3pBqFGdVxxZ8rp",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(!res.ok) throw new Error("Discord error");
 }
-
-
-
-
