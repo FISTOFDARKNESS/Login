@@ -1,8 +1,8 @@
 // Produtos
 window.productCatalog = [
-  { id:1, name:"Designer Dashboard Pro", category:"Dashboard", description:"Dashboard profissional para designers.", image:"https://via.placeholder.com/300x200?text=Dashboard+Pro", link:"https://sketchfab.com/search?type=models"},
-  { id:2, name:"Workspace Analytics Tool", category:"Analytics", description:"Ferramenta completa de análise.", image:"https://via.placeholder.com/300x200?text=Analytics+Tool", link:"#"},
-  { id:3, name:"Modern Web Templates", category:"Templates", description:"Templates modernos para web.", image:"https://via.placeholder.com/300x200?text=Web+Templates", link:"#"}
+  { id:1, name:"Designer Dashboard Pro", category:"Dashboard", description:"Dashboard profissional para designers.", image:"https://www.magiacomputers.it/media/k2/items/cache/39eee751af30032eeece2f48de2de4ba_XL.jpg", link:"https://sketchfab.com/search?type=models"},
+  { id:2, name:"Workspace Analytics Tool", category:"Analytics", description:"Ferramenta completa de análise.", image:"https://www.magiacomputers.it/media/k2/items/cache/39eee751af30032eeece2f48de2de4ba_XL.jpg", link:"#"},
+  { id:3, name:"Modern Web Templates", category:"Templates", description:"Templates modernos para web.", image:"https://www.magiacomputers.it/media/k2/items/cache/39eee751af30032eeece2f48de2de4ba_XL.jpg", link:"#"}
 ];
 
 let products=[], currentProductId=null, selectedRating=0;
@@ -175,5 +175,6 @@ function sendToWebhook(id,user,rating,comment){
     body:JSON.stringify({content:`Produto ID:${id}\nUsuário:${user}\nAvaliação:${rating}\nComentário:${comment}`})
   }).catch(console.error);
 }
+
 
 
