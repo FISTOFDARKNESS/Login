@@ -1,4 +1,4 @@
-// Produtos
+// Products
 window.productCatalog = [
   { id:1, name:"Designer Dashboard Pro", category:"Dashboard", description:"Professional dashboard for designers.", image:"https://www.magiacomputers.it/media/k2/items/cache/39eee751af30032eeece2f48de2de4ba_XL.jpg", link:"https://sketchfab.com/search?type=models"},
   { id:2, name:"Workspace Analytics Tool", category:"Analytics", description:"Complete analysis tool.", image:"https://www.magiacomputers.it/media/k2/items/cache/39eee751af30032eeece2f48de2de4ba_XL.jpg", link:"#"},
@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
   products = window.productCatalog || [];
   if(localStorage.getItem("darkMode")==="true"){
     document.body.classList.add("dark-mode");
-    document.getElementById("theme-toggle").textContent="Modo Claro";
+    document.getElementById("theme-toggle").textContent="Light Mode";
   }
   setupListeners();
   displayProducts(products);
@@ -40,7 +40,7 @@ function setupListeners(){
   document.getElementById("feedback-form").addEventListener("submit", submitFeedback);
 }
 
-// Categorias
+// Categories
 function populateCategories(){
   const select=document.getElementById("category-filter");
   [...new Set(products.map(p=>p.category))].forEach(c=>{
@@ -50,11 +50,11 @@ function populateCategories(){
   });
 }
 
-// Produtos
+// Products
 function displayProducts(list){
   const c=document.getElementById("products-container");
   c.innerHTML="";
-  if(!list.length){ c.innerHTML='<div class="no-results">Nenhum produto encontrado.</div>'; return; }
+  if(!list.length){ c.innerHTML='<div class="no-results">No products found.</div>'; return; }
   list.forEach(p=> c.appendChild(createCard(p)));
 }
 
@@ -72,8 +72,8 @@ function createCard(p){
         <div class="stars">${genStars(avg)}</div>
         <span class="rating-value">${avg.toFixed(1)}</span>
       </div>
-      <a href="${p.link}" target="_blank" class="product-link">Ver Produto</a>
-      <button class="feedback-btn" data-id="${p.id}" style="margin-top:.5rem;background:none;border:none;color:var(--primary);cursor:pointer;text-decoration:underline;">Avaliar</button>
+      <a href="${p.link}" target="_blank" class="product-link">View Product</a>
+      <button class="feedback-btn" data-id="${p.id}" style="margin-top:.5rem;background:none;border:none;color:var(--primary);cursor:pointer;text-decoration:underline;">Rate</button>
     </div>
   `;
   card.querySelector(".feedback-btn").addEventListener("click",()=>openModal(p.id));
@@ -102,7 +102,7 @@ function openModal(id){
   currentProductId=id;
   const p=products.find(x=>x.id===id);
   if(!p) return;
-  document.getElementById("modal-product-name").textContent=`Avaliar: ${p.name}`;
+  document.getElementById("modal-product-name").textContent=`Rate: ${p.name}`;
   document.getElementById("product-id").value=id;
   document.getElementById("feedback-form").reset();
   selectedRating=0;
@@ -123,7 +123,7 @@ function highlightStars(r){
   document.querySelectorAll("#rating-stars .star").forEach((s,i)=>s.style.color=i<r?"#ffc107":"#ccc");
 }
 
-// Filtro
+// Filter
 function filterProducts(){
   const s=document.getElementById("search-input").value.toLowerCase(),
         c=document.getElementById("category-filter").value,
@@ -136,35 +136,39 @@ function filterProducts(){
   }));
 }
 
-// Tema
+// Theme
 function toggleTheme(){
   document.body.classList.toggle("dark-mode");
   const dark=document.body.classList.contains("dark-mode");
   localStorage.setItem("darkMode",dark);
-  document.getElementById("theme-toggle").textContent=dark?"Modo Claro":"Modo Escuro";
+  document.getElementById("theme-toggle").textContent=dark?"Light Mode":"Dark Mode";
 }
 
-// Envio de avaliação
+// Review submission
 async function submitFeedback(e){
   e.preventDefault();
   const id=document.getElementById("product-id").value,
         user=document.getElementById("user-name").value,
         rating=parseInt(document.getElementById("rating-value").value),
         comment=document.getElementById("comment").value;
-  if(!id||!user||!rating||!comment){ alert("Preencha todos os campos."); return; }
+  if(!id||!user||!rating||!comment){ alert("Please fill all fields."); return; }
 
-  // Salva local
+  // Save locally
   const key=`productRatings_${id}`;
   const data=JSON.parse(localStorage.getItem(key)||"[]");
   data.push({user,rating,comment});
   localStorage.setItem(key,JSON.stringify(data));
 
-  // Envia para Discord webhook
-  sendToWebhook(id,user,rating,comment);
+  // Send to Discord webhook
+  try {
+    await sendDiscord(id,user,rating,comment);
+  } catch(err) {
+    console.error("Error sending to Discord:", err);
+  }
 
   closeModal();
   displayProducts(products);
-  alert("Avaliação enviada!");
+  alert("Review submitted!");
 }
 
 async function sendDiscord(id,user,rating,comment){
