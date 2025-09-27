@@ -325,9 +325,10 @@ async function sendDiscord(id,user,rating,comment){
     timestamp:new Date().toISOString()
   }]};
 
-  const res=await fetch("SEU_WEBHOOK_URL_AQUI",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  const res=await fetch("https://discord.com/api/webhooks/1421548516865478677/dH7OCHs4IrrQk2_w6ZsodZISmT1aDTd6IfrXm6b-rT7C83jxqGE9Bf3pBqFGdVxxZ8rp",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
   if(!res.ok) throw new Error("Erro Discord");
 }
 </script>
 </body>
 </html>
+
