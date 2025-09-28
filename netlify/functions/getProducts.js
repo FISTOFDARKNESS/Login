@@ -1,20 +1,25 @@
+// netlify/functions/getProducts.js
 import { neon } from '@netlify/neon';
 
 const sql = neon();
 
-export async function handler(event) {
+export async function handler() {
   try {
-    const { productId } = event.queryStringParameters;
-
-    const reviews = await sql`
-      SELECT user_name, rating, comment, created_at
-      FROM reviews
-      WHERE product_id = ${productId}
-      ORDER BY created_at DESC
+    const products = await sql`
+      SELECT id, name, category, description, image, link
+      FROM products
+      ORDER BY name
     `;
 
-    return { statusCode: 200, body: JSON.stringify(reviews) };
+    return {
+      statusCode: 200,
+      body: JSON.stringify(products),
+    };
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    console.error("Erro ao buscar produtos:", err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: err.message }),
+    };
   }
 }
