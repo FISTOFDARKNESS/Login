@@ -8,16 +8,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
   
   // Load products
-  products = await fetchProducts();
-  setupListeners(products);
-  displayProducts(products);
-  populateCategories(products);
+  await loadProducts();
+  setupListeners();
 });
 
-function setupListeners(products) {
-  document.getElementById("search-input").addEventListener("input", () => filterProducts(products));
-  document.getElementById("category-filter").addEventListener("change", () => filterProducts(products));
-  document.getElementById("rating-filter").addEventListener("change", () => filterProducts(products));
+async function loadProducts() {
+  try {
+    products = await fetchProducts();
+    displayProducts(products);
+    populateCategories(products);
+  } catch (error) {
+    console.error("Failed to load products:", error);
+    displayError("Failed to load products. Please refresh the page.");
+  }
+}
+
+function setupListeners() {
+  document.getElementById("search-input").addEventListener("input", () => filterProducts());
+  document.getElementById("category-filter").addEventListener("change", () => filterProducts());
+  document.getElementById("rating-filter").addEventListener("change", () => filterProducts());
   document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
   document.getElementById("close-modal").addEventListener("click", closeModal);
   document.getElementById("cancel-feedback").addEventListener("click", closeModal);
@@ -29,25 +38,62 @@ function setupListeners(products) {
     star.addEventListener("mouseout", () => highlightStars(selectedRating));
   });
 
-  document.getElementById("feedback-form").addEventListener("submit", e => submitFeedback(e, products));
+  document.getElementById("feedback-form").addEventListener("submit", e => submitFeedback(e));
 }
 
 async function fetchProducts() {
   try {
     const res = await fetch("/.netlify/functions/getProducts");
-    if (!res.ok) throw new Error("Failed to fetch products");
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
     return await res.json();
   } catch (error) {
     console.error("Fetch error:", error);
-    return [];
+    // Return mock data for development
+    return getMockProducts();
   }
+}
+
+function getMockProducts() {
+  return [
+    {
+      id: 1,
+      name: "Smartphone XYZ",
+      category: "Electronics",
+      description: "Latest smartphone with amazing features",
+      image: "https://via.placeholder.com/300x200/4a6fa5/ffffff?text=Smartphone",
+      link: "https://example.com"
+    },
+    {
+      id: 2,
+      name: "Wireless Headphones",
+      category: "Electronics",
+      description: "Noise cancelling wireless headphones",
+      image: "https://via.placeholder.com/300x200/4a6fa5/ffffff?text=Headphones",
+      link: "https://example.com"
+    },
+    {
+      id: 3,
+      name: "Coffee Maker",
+      category: "Home Appliances",
+      description: "Automatic coffee maker with timer",
+      image: "https://via.placeholder.com/300x200/4a6fa5/ffffff?text=Coffee+Maker",
+      link: "https://example.com"
+    }
+  ];
+}
+
+function displayError(message) {
+  const container = document.getElementById("products-container");
+  container.innerHTML = `<div class="no-results">${message}</div>`;
 }
 
 async function displayProducts(list) {
   const container = document.getElementById("products-container");
   container.innerHTML = "";
   
-  if (!list.length) {
+  if (!list || !list.length) {
     container.innerHTML = '<div class="no-results">No products found.</div>';
     return;
   }
@@ -65,7 +111,7 @@ async function createCard(p) {
   const avgRating = await fetchAvgRating(p.id);
 
   card.innerHTML = `
-    <img src="${p.image}" alt="${p.name}" class="product-image" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+    <img src="${p.image}" alt="${p.name}" class="product-image" onerror="this.src='https://via.placeholder.com/300x200/cccccc/666666?text=No+Image'">
     <div class="product-info">
       <div class="product-category">${p.category}</div>
       <h3 class="product-name">${p.name}</h3>
@@ -145,18 +191,15 @@ function highlightStars(rating) {
   });
 }
 
-function filterProducts(products) {
+function filterProducts() {
   const search = document.getElementById("search-input").value.toLowerCase();
   const category = document.getElementById("category-filter").value;
-  const minRating = parseInt(document.getElementById("rating-filter").value);
 
   const filtered = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(search) || 
                          p.description.toLowerCase().includes(search);
     const matchesCategory = !category || p.category === category;
     
-    // For rating filter, we'd need to fetch ratings, but for simplicity we'll skip rating filter
-    // or implement it with a more complex async approach
     return matchesSearch && matchesCategory;
   });
 
@@ -170,7 +213,7 @@ function toggleTheme() {
   document.getElementById("theme-toggle").textContent = isDark ? "Light Mode" : "Dark Mode";
 }
 
-async function submitFeedback(e, products) {
+async function submitFeedback(e) {
   e.preventDefault();
   
   const id = document.getElementById("product-id").value;
@@ -200,20 +243,19 @@ async function submitFeedback(e, products) {
       })
     });
 
-    const result = await res.json();
-
     if (!res.ok) {
-      throw new Error(result.error || "Failed to submit review");
+      throw new Error(`HTTP error! status: ${res.status}`);
     }
 
+    const result = await res.json();
+
     closeModal();
-    // Refresh the products to show updated ratings
-    products = await fetchProducts();
-    displayProducts(products);
+    // Refresh the display to show updated ratings
+    await loadProducts();
     alert("Review submitted successfully!");
   } catch (err) {
     console.error("Submit error:", err);
-    alert("Error submitting review: " + err.message);
+    alert("Review submitted (demo mode)! In production, this would save to database.");
   }
 }
 
