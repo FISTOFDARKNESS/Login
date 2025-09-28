@@ -176,11 +176,13 @@ function displayProducts(list){
   list.forEach(p=>container.appendChild(createCard(p)));
 }
 
-function createCard(p){
-  const avg=calcLocalRating(p.id);
-  const card=document.createElement("div");
-  card.className="product-card";
-  card.innerHTML=`
+async function createCard(p) {
+  const card = document.createElement("div");
+  card.className = "product-card";
+  
+  const avg = await fetchRatingFromServer(p.id);
+
+  card.innerHTML = `
     <img src="${p.image}" alt="${p.name}" class="product-image">
     <div class="product-info">
       <div class="product-category">${p.category}</div>
@@ -192,9 +194,24 @@ function createCard(p){
       </div>
       <a href="${p.link}" target="_blank" class="product-link">View Product</a>
       <button class="feedback-btn" data-id="${p.id}" style="margin-top:.5rem;background:none;border:none;color:var(--primary);cursor:pointer;text-decoration:underline;">Rate</button>
-    </div>`;
+    </div>
+  `;
   card.querySelector(".feedback-btn").addEventListener("click",()=>openModal(p.id));
   return card;
+}
+
+async function fetchRatingFromServer(productId) {
+  try {
+    const res = await fetch(`/.netlify/functions/getReviews?productId=${productId}`);
+    if (!res.ok) throw new Error("Erro ao buscar reviews");
+    const reviews = await res.json();
+    if (!reviews.length) return 4; // default
+    const avg = reviews.reduce((a,b)=>a+b.rating,0)/reviews.length;
+    return avg;
+  } catch (err) {
+    console.error("Erro buscando reviews:", err);
+    return calcLocalRating(productId); // fallback local
+  }
 }
 
 function calcLocalRating(id){
