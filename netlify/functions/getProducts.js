@@ -1,9 +1,22 @@
-import { neon } from '@neondatabase/serverless';
+const { neon } = require('@neondatabase/serverless');
 
-const sql = neon(process.env.DATABASE_URL);
+exports.handler = async function(event, context) {
+  // Handle CORS
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS'
+      },
+      body: ''
+    };
+  }
 
-export const handler = async (event, context) => {
   try {
+    const sql = neon(process.env.DATABASE_URL);
+    
     const products = await sql`
       SELECT id, name, category, description, image, link
       FROM products
@@ -12,13 +25,21 @@ export const handler = async (event, context) => {
 
     return {
       statusCode: 200,
-      body: JSON.stringify(products),
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify(products)
     };
   } catch (err) {
-    console.error("Erro ao buscar produtos:", err);
+    console.error("Database error:", err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: err.message }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify({ error: "Internal server error" })
     };
   }
 };
