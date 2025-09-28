@@ -18,9 +18,6 @@ export async function handler(event) {
       body: JSON.stringify(reviews),
     };
   } catch (err) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: err.message }),
-    };
+    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 }
