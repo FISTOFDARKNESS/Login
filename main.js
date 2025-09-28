@@ -41,6 +41,119 @@ function setupListeners() {
   });
 
   document.getElementById("feedback-form").addEventListener("submit", e => submitFeedback(e));
+  
+  // Adicionar reCAPTCHA aos botões "View Product"
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('product-link')) {
+      e.preventDefault();
+      handleViewProduct(e.target.href);
+    }
+  });
+}
+
+// Função para verificar reCAPTCHA
+async function verifyRecaptcha(token) {
+  try {
+    const response = await fetch('/.netlify/functions/verifyRecaptcha', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token })
+    });
+    
+    const result = await response.json();
+    return result.success;
+  } catch (error) {
+    console.error('reCAPTCHA verification error:', error);
+    return false;
+  }
+}
+
+// Função para lidar com "View Product" com reCAPTCHA
+async function handleViewProduct(url) {
+  // Verificar se o reCAPTCHA já foi resolvido
+  const recaptchaResponse = grecaptcha.getResponse();
+  
+  if (!recaptchaResponse) {
+    // Se não foi resolvido, pedir para o usuário completar
+    alert('Please complete the reCAPTCHA verification first.');
+    
+    // Abrir modal para completar reCAPTCHA
+    openRecaptchaModal(url);
+    return;
+  }
+  
+  // Verificar o token do reCAPTCHA
+  const isValid = await verifyRecaptcha(recaptchaResponse);
+  
+  if (isValid) {
+    // Se válido, redirecionar para o produto
+    window.open(url, '_blank');
+    // Resetar reCAPTCHA
+    grecaptcha.reset();
+  } else {
+    alert('reCAPTCHA verification failed. Please try again.');
+    grecaptcha.reset();
+  }
+}
+
+// Modal para reCAPTCHA em View Product
+function openRecaptchaModal(url) {
+  const modal = document.createElement('div');
+  modal.className = 'feedback-modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Verification Required</h2>
+        <button class="close-modal" id="close-recaptcha-modal">&times;</button>
+      </div>
+      <div style="text-align: center;">
+        <p>Please complete the reCAPTCHA to view the product:</p>
+        <div class="recaptcha-container">
+          <div class="g-recaptcha" data-sitekey="6LdOEdgrAAAAAN7VCLzmZj1ilE0frmol09Hfd-4V"></div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="cancel-btn" id="cancel-recaptcha">Cancel</button>
+          <button type="button" class="submit-btn" id="proceed-recaptcha">Proceed</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Event listeners para o modal de reCAPTCHA
+  document.getElementById('close-recaptcha-modal').addEventListener('click', () => {
+    document.body.removeChild(modal);
+    grecaptcha.reset();
+  });
+  
+  document.getElementById('cancel-recaptcha').addEventListener('click', () => {
+    document.body.removeChild(modal);
+    grecaptcha.reset();
+  });
+  
+  document.getElementById('proceed-recaptcha').addEventListener('click', async () => {
+    const recaptchaResponse = grecaptcha.getResponse();
+    
+    if (!recaptchaResponse) {
+      alert('Please complete the reCAPTCHA.');
+      return;
+    }
+    
+    const isValid = await verifyRecaptcha(recaptchaResponse);
+    
+    if (isValid) {
+      window.open(url, '_blank');
+      document.body.removeChild(modal);
+      grecaptcha.reset();
+    } else {
+      alert('reCAPTCHA verification failed. Please try again.');
+      grecaptcha.reset();
+    }
+  });
 }
 
 async function fetchProducts() {
@@ -173,12 +286,23 @@ function openModal(id) {
   document.getElementById("user-name").value = "";
   document.getElementById("comment").value = "";
   highlightStars(0);
+  
+  // Reset reCAPTCHA no modal
+  if (typeof grecaptcha !== 'undefined' && grecaptcha.reset) {
+    grecaptcha.reset();
+  }
+  
   document.getElementById("feedback-modal").style.display = "flex";
 }
 
 function closeModal() {
   document.getElementById("feedback-modal").style.display = "none";
   currentProductId = null;
+  
+  // Reset reCAPTCHA ao fechar modal
+  if (typeof grecaptcha !== 'undefined' && grecaptcha.reset) {
+    grecaptcha.reset();
+  }
 }
 
 function selectRating(star) {
@@ -233,6 +357,21 @@ async function submitFeedback(e) {
     return;
   }
 
+  // Verificar reCAPTCHA
+  const recaptchaResponse = grecaptcha.getResponse();
+  if (!recaptchaResponse) {
+    alert("Please complete the reCAPTCHA verification.");
+    return;
+  }
+
+  // Verificar o token do reCAPTCHA
+  const isValidRecaptcha = await verifyRecaptcha(recaptchaResponse);
+  if (!isValidRecaptcha) {
+    alert("reCAPTCHA verification failed. Please try again.");
+    grecaptcha.reset();
+    return;
+  }
+
   try {
     console.log('Submitting review to Neon...', { id, user, rating, comment });
     const response = await fetch(`/.netlify/functions/addReview`, {
@@ -261,6 +400,9 @@ async function submitFeedback(e) {
   } catch (err) {
     console.error("Submit error:", err);
     alert("Error submitting review: " + err.message);
+  } finally {
+    // Resetar reCAPTCHA
+    grecaptcha.reset();
   }
 }
 
