@@ -1,7 +1,7 @@
-const { neon } = require('@neondatabase/serverless');
+import { neon } from '@neondatabase/serverless';
 
-exports.handler = async function(event, context) {
-  // Handle CORS preflight
+export async function handler(event, context) {
+
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -51,7 +51,7 @@ exports.handler = async function(event, context) {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       },
-      body: JSON.stringify({ error: "Internal server error" }) 
+      body: JSON.stringify({ error: err.message }) 
     };
   }
-};
+}
