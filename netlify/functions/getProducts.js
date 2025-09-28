@@ -9,15 +9,8 @@ export async function handler() {
       FROM products
       ORDER BY name
     `;
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify(products),
-    };
+    return { statusCode: 200, body: JSON.stringify(products) };
   } catch (err) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: err.message }),
-    };
+    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 }
