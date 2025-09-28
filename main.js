@@ -44,13 +44,7 @@
   margin: 0; 
   padding: 0; 
   box-sizing: border-box; 
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-  -webkit-tap-highlight-color: transparent;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; 
 }
 
 body { 
@@ -59,11 +53,6 @@ body {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
   line-height: 1.6;
   min-height: 100vh;
-  -webkit-user-drag: none;
-  -khtml-user-drag: none;
-  -moz-user-drag: none;
-  -o-user-drag: none;
-  user-drag: none;
 }
 
 body::before {
@@ -274,12 +263,6 @@ main {
   height: 220px; 
   object-fit: cover;
   transition: transform 0.4s ease;
-  pointer-events: none;
-  -webkit-user-drag: none;
-  -khtml-user-drag: none;
-  -moz-user-drag: none;
-  -o-user-drag: none;
-  user-drag: none;
 }
 
 .product-card:hover .product-image {
@@ -613,113 +596,9 @@ main {
   background-size: 200px 100%;
   animation: shimmer 1.5s infinite;
 }
-
-img {
-  -webkit-user-drag: none;
-  -khtml-user-drag: none;
-  -moz-user-drag: none;
-  -o-user-drag: none;
-  user-drag: none;
-  pointer-events: none;
-}
-
-::selection {
-  background: transparent;
-}
-
-::-moz-selection {
-  background: transparent;
-}
-
-body {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-input, textarea {
-  -webkit-user-select: text !important;
-  -moz-user-select: text !important;
-  -ms-user-select: text !important;
-  user-select: text !important;
-}
-
-.no-copy {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
 </style>
 </head>
-<body oncontextmenu="return false" ondragstart="return false" onselectstart="return false">
-<script>
-document.addEventListener('keydown', function(e) {
-  if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S' || e.key === 'a' || e.key === 'A' || e.key === 'c' || e.key === 'C' || e.key === 'v' || e.key === 'V' || e.key === 'x' || e.key === 'X')) {
-    e.preventDefault();
-    return false;
-  }
-  if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c'))) {
-    e.preventDefault();
-    return false;
-  }
-  if (e.ctrlKey && e.shiftKey && e.key === 'K') {
-    e.preventDefault();
-    return false;
-  }
-});
-
-document.addEventListener('contextmenu', function(e) {
-  e.preventDefault();
-  return false;
-});
-
-document.addEventListener('selectstart', function(e) {
-  e.preventDefault();
-  return false;
-});
-
-document.addEventListener('dragstart', function(e) {
-  e.preventDefault();
-  return false;
-});
-
-window.addEventListener('beforeprint', function(e) {
-  e.preventDefault();
-  return false;
-});
-
-document.addEventListener('copy', function(e) {
-  e.clipboardData.setData('text/plain', '');
-  e.preventDefault();
-  return false;
-});
-
-setInterval(function() {
-  if (typeof DevToolsChecker !== 'undefined') {
-    window.location.reload();
-  }
-}, 1000);
-
-var devtools = {
-  open: false,
-  orientation: null
-};
-
-setInterval(function() {
-  if (window.outerHeight - window.innerHeight > 200 || window.outerWidth - window.innerWidth > 200) {
-    if (!devtools.open) {
-      devtools.open = true;
-      document.body.innerHTML = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;z-index:99999;">Access Denied</div>';
-    }
-  } else {
-    devtools.open = false;
-  }
-}, 500);
-</script>
+<body>
 <header>
   <div class="header-content">
     <h1>Product Catalog</h1>
