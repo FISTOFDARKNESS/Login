@@ -16,7 +16,6 @@ export async function handler(event, context) {
 
   try {
     const { productId } = event.queryStringParameters;
-    console.log('Fetching reviews for product:', productId);
 
     if (!productId) {
       return {
@@ -29,7 +28,10 @@ export async function handler(event, context) {
       };
     }
 
-    const sql = neon(process.env.DATABASE_URL);
+    // ✅ COLOCA A SUA CONNECTION STRING AQUI DIRETAMENTE
+    const connectionString = "postgresql://neondb_owner:npg_mgw4DTLjik8l@ep-autumn-rice-ae1jy1wl-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require";
+    
+    const sql = neon(connectionString);
     
     const reviews = await sql`
       SELECT user_name, rating, comment, created_at
@@ -37,8 +39,6 @@ export async function handler(event, context) {
       WHERE product_id = ${parseInt(productId)}
       ORDER BY created_at DESC
     `;
-
-    console.log(`Found ${reviews.length} reviews for product ${productId}`);
 
     return { 
       statusCode: 200, 
