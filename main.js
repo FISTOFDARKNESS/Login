@@ -5,9 +5,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.body.classList.add("dark-mode");
     document.getElementById("theme-toggle").textContent = "Light Mode";
   }
-
-  products = await fetchProducts();
-
+  fetchProducts();
   setupListeners(products);
   displayProducts(products);
   populateCategories(products);
