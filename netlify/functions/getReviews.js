@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 
 export async function handler(event, context) {
-
+  // Handle CORS
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -16,6 +16,7 @@ export async function handler(event, context) {
 
   try {
     const { productId } = event.queryStringParameters;
+    console.log('Fetching reviews for product:', productId);
 
     if (!productId) {
       return {
@@ -33,9 +34,11 @@ export async function handler(event, context) {
     const reviews = await sql`
       SELECT user_name, rating, comment, created_at
       FROM reviews
-      WHERE product_id = ${productId}
+      WHERE product_id = ${parseInt(productId)}
       ORDER BY created_at DESC
     `;
+
+    console.log(`Found ${reviews.length} reviews for product ${productId}`);
 
     return { 
       statusCode: 200, 
@@ -53,7 +56,10 @@ export async function handler(event, context) {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       },
-      body: JSON.stringify({ error: err.message }) 
+      body: JSON.stringify({ 
+        error: "Internal server error",
+        message: err.message 
+      }) 
     };
   }
 }
