@@ -1,4 +1,3 @@
-// Products
 window.productCatalog = [
   { id:1, name:"Designer Dashboard Pro", category:"Dashboard", description:"Professional dashboard for designers.", image:"https://www.magiacomputers.it/media/k2/items/cache/39eee751af30032eeece2f48de2de4ba_XL.jpg", link:"https://sketchfab.com/search?type=models"},
   { id:2, name:"Workspace Analytics Tool", category:"Analytics", description:"Complete analysis tool.", image:"https://www.magiacomputers.it/media/k2/items/cache/39eee751af30032eeece2f48de2de4ba_XL.jpg", link:"#"},
@@ -18,7 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
   populateCategories();
 });
 
-// Listeners
 function setupListeners(){
   document.getElementById("search-input").addEventListener("input", filterProducts);
   document.getElementById("category-filter").addEventListener("change", filterProducts);
@@ -40,7 +38,6 @@ function setupListeners(){
   document.getElementById("feedback-form").addEventListener("submit", submitFeedback);
 }
 
-// Categories
 function populateCategories(){
   const select=document.getElementById("category-filter");
   [...new Set(products.map(p=>p.category))].forEach(c=>{
@@ -50,7 +47,6 @@ function populateCategories(){
   });
 }
 
-// Products
 function displayProducts(list){
   const c=document.getElementById("products-container");
   c.innerHTML="";
@@ -80,7 +76,6 @@ function createCard(p){
   return card;
 }
 
-// Ratings
 function calcRating(id){
   const data=localStorage.getItem(`productRatings_${id}`);
   if(!data) return 4;
@@ -97,7 +92,6 @@ function genStars(r){
   return s;
 }
 
-// Modal
 function openModal(id){
   currentProductId=id;
   const p=products.find(x=>x.id===id);
@@ -123,7 +117,6 @@ function highlightStars(r){
   document.querySelectorAll("#rating-stars .star").forEach((s,i)=>s.style.color=i<r?"#ffc107":"#ccc");
 }
 
-// Filter
 function filterProducts(){
   const s=document.getElementById("search-input").value.toLowerCase(),
         c=document.getElementById("category-filter").value,
@@ -136,7 +129,6 @@ function filterProducts(){
   }));
 }
 
-// Theme
 function toggleTheme(){
   document.body.classList.toggle("dark-mode");
   const dark=document.body.classList.contains("dark-mode");
@@ -144,7 +136,6 @@ function toggleTheme(){
   document.getElementById("theme-toggle").textContent=dark?"Light Mode":"Dark Mode";
 }
 
-// Review submission
 async function submitFeedback(e){
   e.preventDefault();
   const id=document.getElementById("product-id").value,
@@ -153,13 +144,11 @@ async function submitFeedback(e){
         comment=document.getElementById("comment").value;
   if(!id||!user||!rating||!comment){ alert("Please fill all fields."); return; }
 
-  // Save locally
   const key=`productRatings_${id}`;
   const data=JSON.parse(localStorage.getItem(key)||"[]");
   data.push({user,rating,comment});
   localStorage.setItem(key,JSON.stringify(data));
 
-  // Send to Discord webhook
   try {
     await sendDiscord(id,user,rating,comment);
   } catch(err) {
