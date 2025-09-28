@@ -716,6 +716,7 @@ img {
       <input type="hidden" id="rating-value" required />
       <label for="comment">Comment:</label>
       <textarea id="comment" required></textarea>
+      <div class="g-recaptcha" data-sitekey="6LdOEdgrAAAAAN7VCLzmZj1ilE0frmol09Hfd-4V"></div>
       <div class="form-actions">
         <button type="button" class="cancel-btn" id="cancel-feedback">Cancel</button>
         <button type="submit" class="submit-btn">Submit Review</button>
@@ -725,6 +726,7 @@ img {
 </div>
 
 <script src="main.js"></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   document.addEventListener('contextmenu', function(e) {
@@ -795,4 +797,5 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
 
