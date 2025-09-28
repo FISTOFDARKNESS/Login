@@ -44,7 +44,13 @@
   margin: 0; 
   padding: 0; 
   box-sizing: border-box; 
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; 
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body { 
@@ -53,6 +59,12 @@ body {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
   line-height: 1.6;
   min-height: 100vh;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  overflow-x: hidden;
 }
 
 body::before {
@@ -153,6 +165,10 @@ h1 {
   outline: none;
   font-size: 0.95rem;
   font-weight: 400;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
 
 .search-box input::placeholder {
@@ -263,6 +279,18 @@ main {
   height: 220px; 
   object-fit: cover;
   transition: transform 0.4s ease;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .product-card:hover .product-image {
@@ -456,6 +484,10 @@ main {
   color: var(--fg);
   transition: all 0.3s ease;
   font-family: inherit;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
 
 .feedback-form input:focus, .feedback-form textarea:focus {
@@ -596,6 +628,43 @@ main {
   background-size: 200px 100%;
   animation: shimmer 1.5s infinite;
 }
+
+img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
+}
+
+::selection {
+  background: transparent;
+}
+
+::-moz-selection {
+  background: transparent;
+}
+
+*::before, *::after {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.no-context-menu {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+@media print {
+  body { display: none !important; }
+}
 </style>
 </head>
 <body>
@@ -656,5 +725,73 @@ main {
 </div>
 
 <script src="main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    return false;
+  });
+
+  document.addEventListener('selectstart', function(e) {
+    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  document.addEventListener('dragstart', function(e) {
+    e.preventDefault();
+    return false;
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && (e.keyCode === 65 || e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 88 || e.keyCode === 85 || e.keyCode === 83 || e.keyCode === 80)) {
+      if (!(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+        e.preventDefault();
+        return false;
+      }
+    }
+    if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && e.keyCode === 73) || (e.ctrlKey && e.shiftKey && e.keyCode === 74)) {
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  document.addEventListener('mousedown', function(e) {
+    if (e.button === 1) {
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  document.addEventListener('copy', function(e) {
+    if (!(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+      e.clipboardData.setData('text/plain', '');
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  setInterval(function() {
+    if (window.devtools && window.devtools.open) {
+      window.location.reload();
+    }
+  }, 500);
+
+  let devtools = {open: false};
+  setInterval(function() {
+    let threshold = 160;
+    if (window.outerHeight - window.innerHeight > threshold || 
+        window.outerWidth - window.innerWidth > threshold) {
+      if (!devtools.open) {
+        devtools.open = true;
+        document.body.innerHTML = '<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;color:red;">Access Denied</div>';
+      }
+    } else {
+      devtools.open = false;
+    }
+  }, 500);
+});
+</script>
 </body>
 </html>
