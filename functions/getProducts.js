@@ -16,7 +16,7 @@ export async function handler(event, context) {
 
   try {
     // ✅ COLOCA A SUA CONNECTION STRING AQUI DIRETAMENTE
-    const connectionString = "postgresql://neondb_owner:npg_mgw4DTLjik8l@ep-holy-darkness-aevwosmo-pooler.c-2.us-east-2.aws.neon.tech/Checkpoint?sslmode=require&channel_binding=require";
+    const connectionString = "postgresql://neondb_owner:npg_mgw4DTLjik8l@ep-holy-darkness-aevwosmo-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require";
     
     const sql = neon(connectionString);
     
@@ -49,4 +49,5 @@ export async function handler(event, context) {
     };
   }
 }
+
 
