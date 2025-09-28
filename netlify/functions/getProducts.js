@@ -1,6 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 
 export async function handler(event, context) {
+
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -14,14 +15,18 @@ export async function handler(event, context) {
   }
 
   try {
+    console.log('Connecting to Neon database...');
     const sql = neon(process.env.DATABASE_URL);
     
+    console.log('Fetching products from database...');
     const products = await sql`
       SELECT id, name, category, description, image, link
       FROM products
       ORDER BY name
     `;
 
+    console.log(`Found ${products.length} products`);
+    
     return {
       statusCode: 200,
       headers: {
@@ -38,7 +43,10 @@ export async function handler(event, context) {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       },
-      body: JSON.stringify({ error: err.message })
+      body: JSON.stringify({ 
+        error: "Internal server error",
+        message: err.message 
+      })
     };
   }
 }
