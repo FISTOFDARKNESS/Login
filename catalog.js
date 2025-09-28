@@ -6,11 +6,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   setupListeners();
 
-  // Fetch produtos do servidor
   products = await fetchProducts();
   
-  displayProducts(products);
-  populateCategories();
+ displayProducts(products).then(() => {
+    populateCategories();
 });
 
 function setupListeners(products) {
@@ -32,8 +31,11 @@ function setupListeners(products) {
 
 let currentProductId = null, selectedRating = 0;
 
-async function populateCategories(products) {
+function populateCategories() {
   const select = document.getElementById("category-filter");
+  // Remove opções antigas, exceto "All categories"
+  select.querySelectorAll("option:not([value=''])").forEach(o => o.remove());
+
   [...new Set(products.map(p => p.category))].forEach(cat => {
     const option = document.createElement("option");
     option.value = cat;
@@ -41,6 +43,8 @@ async function populateCategories(products) {
     select.appendChild(option);
   });
 }
+
+
 async function fetchProducts() {
   try {
     const res = await fetch("/netlify/functions/getProducts");
@@ -177,4 +181,5 @@ async function submitFeedback(e, products) {
     alert("Error submitting review.");
   }
 }
+
 
