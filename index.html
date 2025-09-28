@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Product Catalog</title>
-<!-- Adicionar reCAPTCHA -->
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<!-- Adicionar reCAPTCHA v3 -->
+<script src="https://www.google.com/recaptcha/api.js?render=6LdOEdgrAAAAAN7VCLzmZj1ilE0frmol09Hfd-4V"></script>
 <style>
 /* Seu CSS existente permanece igual */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -505,13 +505,6 @@ main {
   line-height: 1.6;
 }
 
-/* Estilos para o reCAPTCHA */
-.recaptcha-container {
-  margin: 1.5rem 0;
-  display: flex;
-  justify-content: center;
-}
-
 .form-actions { 
   display: flex; 
   justify-content: flex-end; 
@@ -566,6 +559,22 @@ main {
   padding: 4rem 2rem; 
   color: var(--secondary);
   font-size: 1.1rem;
+}
+
+/* Loading indicator para reCAPTCHA */
+.recaptcha-loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255,255,255,.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Responsive Design */
@@ -735,14 +744,14 @@ img {
       <label for="comment">Comment:</label>
       <textarea id="comment" required></textarea>
       
-      <!-- Container para o reCAPTCHA -->
-      <div class="recaptcha-container">
-        <div class="g-recaptcha" data-sitekey="6LdOEdgrAAAAAN7VCLzmZj1ilE0frmol09Hfd-4V"></div>
-      </div>
-      
       <div class="form-actions">
         <button type="button" class="cancel-btn" id="cancel-feedback">Cancel</button>
-        <button type="submit" class="submit-btn" id="submit-review-btn">Submit Review</button>
+        <button type="submit" class="submit-btn" id="submit-review-btn">
+          <span id="submit-text">Submit Review</span>
+          <span id="submit-loading" style="display: none;">
+            <span class="recaptcha-loading"></span>Verifying...
+          </span>
+        </button>
       </div>
     </form>
   </div>
