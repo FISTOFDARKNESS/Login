@@ -1,8 +1,6 @@
-import { neon } from '@neondatabase/serverless';
+const { neon } = require('@neondatabase/serverless');
 
-const sql = neon(process.env.DATABASE_URL);
-
-export async function handler(event) {
+exports.handler = async function(event, context) {
   // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return {
@@ -30,6 +28,8 @@ export async function handler(event) {
       };
     }
 
+    const sql = neon(process.env.DATABASE_URL);
+    
     await sql`
       INSERT INTO reviews (product_id, user_name, rating, comment, created_at)
       VALUES (${productId}, ${userName}, ${rating}, ${comment}, NOW())
@@ -44,13 +44,14 @@ export async function handler(event) {
       body: JSON.stringify({ success: true }) 
     };
   } catch (err) {
+    console.error("Database error:", err);
     return { 
       statusCode: 500, 
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       },
-      body: JSON.stringify({ error: err.message }) 
+      body: JSON.stringify({ error: "Internal server error" }) 
     };
   }
-}cle
+};
