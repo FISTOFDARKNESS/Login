@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 
 export async function handler(event, context) {
-
+  // Handle CORS
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -15,18 +15,17 @@ export async function handler(event, context) {
   }
 
   try {
-    console.log('Connecting to Neon database...');
-    const sql = neon(process.env.DATABASE_URL);
+    // ✅ COLOCA A SUA CONNECTION STRING AQUI DIRETAMENTE
+    const connectionString = "postgresql://neondb_owner:npg_mgw4DTLjik8l@ep-autumn-rice-ae1jy1wl-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require";
     
-    console.log('Fetching products from database...');
+    const sql = neon(connectionString);
+    
     const products = await sql`
       SELECT id, name, category, description, image, link
       FROM products
       ORDER BY name
     `;
 
-    console.log(`Found ${products.length} products`);
-    
     return {
       statusCode: 200,
       headers: {
