@@ -1,16 +1,26 @@
 import { neon } from '@netlify/neon';
+
 const sql = neon();
 
 export async function handler(event) {
   try {
-    const { id } = event.queryStringParameters;
+    const { productId } = event.queryStringParameters;
 
     const reviews = await sql`
-      SELECT * FROM reviews WHERE product_id = ${id} ORDER BY created_at DESC
+      SELECT user_name, rating, comment, created_at
+      FROM reviews
+      WHERE product_id = ${productId}
+      ORDER BY created_at DESC
     `;
 
-    return { statusCode: 200, body: JSON.stringify(reviews) };
+    return {
+      statusCode: 200,
+      body: JSON.stringify(reviews),
+    };
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: err.message }),
+    };
   }
 }
