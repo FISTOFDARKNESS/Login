@@ -1,64 +1,64 @@
 let products = [], currentProductId = null, selectedRating = 0;
 
-document.addEventListener("DOMContentLoaded", () => {
-  products = window.productCatalog || [];
-  
+document.addEventListener("DOMContentLoaded", async () => {
   if (localStorage.getItem("darkMode") === "true") {
     document.body.classList.add("dark-mode");
     document.getElementById("theme-toggle").textContent = "Light Mode";
   }
-  
-  setupListeners();
-  displayProducts(products).then(() => {
-    populateCategories();
-  });
+
+  products = await fetchProducts();
+
+  setupListeners(products);
+  displayProducts(products);
+  populateCategories(products);
 });
 
-function setupListeners(){
-  document.getElementById("search-input").addEventListener("input", filterProducts);
-  document.getElementById("category-filter").addEventListener("change", filterProducts);
-  document.getElementById("rating-filter").addEventListener("change", filterProducts);
+function setupListeners(products) {
+  document.getElementById("search-input").addEventListener("input", () => filterProducts(products));
+  document.getElementById("category-filter").addEventListener("change", () => filterProducts(products));
+  document.getElementById("rating-filter").addEventListener("change", () => filterProducts(products));
   document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
   document.getElementById("close-modal").addEventListener("click", closeModal);
   document.getElementById("cancel-feedback").addEventListener("click", closeModal);
 
-  document.querySelectorAll(".star").forEach(s=>{
-    s.addEventListener("click",()=>{
-      selectedRating=parseInt(s.dataset.value);
-      updateStars(selectedRating);
-      document.getElementById("rating-value").value=selectedRating;
-    });
-    s.addEventListener("mouseover",()=>highlightStars(parseInt(s.dataset.value)));
-    s.addEventListener("mouseout",()=>updateStars(selectedRating));
+  document.querySelectorAll(".star").forEach(star => {
+    star.addEventListener("click", () => selectRating(star));
+    star.addEventListener("mouseover", () => highlightStars(parseInt(star.dataset.value)));
+    star.addEventListener("mouseout", () => highlightStars(selectedRating));
   });
 
-  document.getElementById("feedback-form").addEventListener("submit", submitFeedback);
+  document.getElementById("feedback-form").addEventListener("submit", e => submitFeedback(e, products));
 }
 
-function populateCategories(){
-  const select=document.getElementById("category-filter");
-  [...new Set(products.map(p=>p.category))].forEach(c=>{
-    const option=document.createElement("option");
-    option.value=c;
-    option.textContent=c;
-    select.appendChild(option);
-  });
+async function fetchProducts() {
+  try {
+    const res = await fetch("/.netlify/functions/getProducts");
+    if (!res.ok) throw new Error("Erro ao buscar produtos");
+    return await res.json();
+  } catch {
+    return [];
+  }
 }
 
-async function displayProducts(list){
-  const container=document.getElementById("products-container");
-  container.innerHTML="";
-  if(!list.length){container.innerHTML='<div class="no-results">No products found.</div>'; return;}
+async function displayProducts(list) {
+  const container = document.getElementById("products-container");
+  container.innerHTML = "";
+  if (!list.length) {
+    container.innerHTML = '<div class="no-results">No products found.</div>';
+    return;
+  }
+
   for (const p of list) {
-    container.appendChild(await createCard(p));
+    const card = await createCard(p);
+    container.appendChild(card);
   }
 }
 
 async function createCard(p) {
   const card = document.createElement("div");
   card.className = "product-card";
-  
-  const avg = await fetchRatingFromServer(p.id);
+
+  const avg = await fetchAvgRating(p.id);
 
   card.innerHTML = `
     <img src="${p.image}" alt="${p.name}" class="product-image">
@@ -74,139 +74,107 @@ async function createCard(p) {
       <button class="feedback-btn" data-id="${p.id}" style="margin-top:.5rem;background:none;border:none;color:var(--primary);cursor:pointer;text-decoration:underline;">Rate</button>
     </div>
   `;
-  card.querySelector(".feedback-btn").addEventListener("click",()=>openModal(p.id));
+
+  card.querySelector(".feedback-btn").addEventListener("click", () => openModal(p.id));
   return card;
 }
 
-async function fetchRatingFromServer(productId) {
+async function fetchAvgRating(productId) {
   try {
-    const res = await fetch(`/.netlify/functions/getReviews?productId=${productId}`);
-    if (!res.ok) throw new Error("Erro ao buscar reviews");
-    const reviews = await res.json();
-    if (!reviews.length) return 4; // default
-    const avg = reviews.reduce((a,b)=>a+b.rating,0)/reviews.length;
-    return avg;
-  } catch (err) {
-    console.error("Erro buscando reviews:", err);
-    return calcLocalRating(productId); // fallback local
+    const reviews = await fetch(`/.netlify/functions/getReviews?productId=${productId}`).then(r => r.json());
+    if (!reviews.length) return 4;
+    return reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+  } catch {
+    return 4;
   }
 }
 
-function calcLocalRating(id){
-  const data=localStorage.getItem(`productRatings_${id}`);
-  if(!data) return 4;
-  const arr=JSON.parse(data);
-  if(!arr.length) return 4;
-  return arr.reduce((a,b)=>a+b.rating,0)/arr.length;
-}
-
-function genStars(r){
-  let html="",f=Math.floor(r),half=r%1>=0.5;
-  for(let i=1;i<=5;i++){
-    html+=i<=f||i===f+1&&half?'<span class="star">★</span>':'<span class="star" style="color:#ccc;">★</span>';
+function genStars(r) {
+  let html = "", f = Math.floor(r), half = r % 1 >= 0.5;
+  for (let i = 1; i <= 5; i++) {
+    html += i <= f || (i === f + 1 && half) ? '<span class="star">★</span>' : '<span class="star" style="color:#ccc;">★</span>';
   }
   return html;
 }
 
-function openModal(id){
-  currentProductId=id;
-  const p=products.find(x=>x.id===id);
-  if(!p) return;
-  document.getElementById("modal-product-name").textContent=`Rate: ${p.name}`;
-  document.getElementById("product-id").value=id;
-  document.getElementById("feedback-form").reset();
-  selectedRating=0;updateStars(0);
-  document.getElementById("feedback-modal").style.display="flex";
+function openModal(id) {
+  const product = products.find(p => p.id === id);
+  if (!product) return;
+  currentProductId = id;
+  document.getElementById("modal-product-name").textContent = `Rate: ${product.name}`;
+  document.getElementById("product-id").value = id;
+  selectedRating = 0;
+  highlightStars(0);
+  document.getElementById("feedback-modal").style.display = "flex";
 }
 
-function closeModal(){
-  document.getElementById("feedback-modal").style.display="none";
-  currentProductId=null;
+function closeModal() {
+  document.getElementById("feedback-modal").style.display = "none";
+  currentProductId = null;
 }
 
-function updateStars(r){
-  document.querySelectorAll("#rating-stars .star").forEach((s,i)=>{s.style.color=i<r?"#ffc107":"#ccc";});
+function selectRating(star) {
+  selectedRating = parseInt(star.dataset.value);
+  document.getElementById("rating-value").value = selectedRating;
+  highlightStars(selectedRating);
 }
 
-function highlightStars(r){
-  document.querySelectorAll("#rating-stars .star").forEach((s,i)=>{s.style.color=i<r?"#ffc107":"#ccc";});
+function highlightStars(r) {
+  document.querySelectorAll("#rating-stars .star").forEach((s, i) => s.style.color = i < r ? "#ffc107" : "#ccc");
 }
 
-function filterProducts(){
-  const s=document.getElementById("search-input").value.toLowerCase(),
-        c=document.getElementById("category-filter").value,
-        r=parseInt(document.getElementById("rating-filter").value);
-  displayProducts(products.filter(p=>{
-    const mS=p.name.toLowerCase().includes(s)||p.description.toLowerCase().includes(s),
-          mC=!c||p.category===c,
-          mR=!r||calcLocalRating(p.id)>=r;
-    return mS&&mC&&mR;
-  }));
+function filterProducts(products) {
+  const search = document.getElementById("search-input").value.toLowerCase();
+  const category = document.getElementById("category-filter").value;
+
+  const filtered = products.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(search) || p.description.toLowerCase().includes(search);
+    const matchesCategory = !category || p.category === category;
+    return matchesSearch && matchesCategory;
+  });
+
+  displayProducts(filtered);
 }
 
-function toggleTheme(){
+function toggleTheme() {
   document.body.classList.toggle("dark-mode");
-  const dark=document.body.classList.contains("dark-mode");
-  localStorage.setItem("darkMode",dark);
-  document.getElementById("theme-toggle").textContent=dark?"Light Mode":"Dark Mode";
+  const dark = document.body.classList.contains("dark-mode");
+  localStorage.setItem("darkMode", dark);
+  document.getElementById("theme-toggle").textContent = dark ? "Light Mode" : "Dark Mode";
 }
 
-async function submitFeedback(e){
+async function submitFeedback(e, products) {
   e.preventDefault();
-  const id=document.getElementById("product-id").value,
-        user=document.getElementById("user-name").value,
-        rating=parseInt(document.getElementById("rating-value").value),
-        comment=document.getElementById("comment").value;
-  if(!id||!user||!rating||!comment){alert("Fill all fields.");return;}
+  const id = document.getElementById("product-id").value;
+  const user = document.getElementById("user-name").value;
+  const rating = parseInt(document.getElementById("rating-value").value);
+  const comment = document.getElementById("comment").value;
 
-  saveLocalReview(id,user,rating,comment);
+  if (!id || !user || !rating || !comment) { alert("Fill all fields."); return; }
 
   try {
-    await sendReviewNeon(id,user,rating,comment);
-    await sendDiscord(id,user,rating,comment);
+    await fetch(`/.netlify/functions/addReview`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId: id, userName: user, rating, comment })
+    });
+
     closeModal();
     displayProducts(products);
     alert("Review submitted!");
-  } catch(err){
+  } catch (err) {
     console.error(err);
-    alert("Error sending review to server. Saved locally.");
+    alert("Error submitting review.");
   }
 }
 
-function saveLocalReview(id,user,rating,comment){
-  const key=`productRatings_${id}`;
-  const data=localStorage.getItem(key);
-  const arr=data?JSON.parse(data):[];
-  arr.push({userName:user,rating,comment,date:new Date().toISOString()});
-  localStorage.setItem(key,JSON.stringify(arr));
-}
-
-async function sendReviewNeon(id,user,rating,comment){
-  const res=await fetch(`/.netlify/functions/addReview`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({productId:id,userName:user,rating,comment})
+async function populateCategories(products) {
+  const select = document.getElementById("category-filter");
+  select.innerHTML = '<option value="">All categories</option>';
+  [...new Set(products.map(p => p.category))].forEach(cat => {
+    const option = document.createElement("option");
+    option.value = cat;
+    option.textContent = cat;
+    select.appendChild(option);
   });
-  if(!res.ok) throw new Error("Neon save error");
-}
-
-async function sendDiscord(id,user,rating,comment){
-  const p=products.find(x=>x.id==id);
-  if(!p) return;
-  const color=rating>=4?0x00ff00:rating>=3?0xffff00:0xff0000;
-  const body={embeds:[{
-    title:`⭐ ${rating}/5 - New Review`,
-    color,
-    description:`**${p.name}** received a new review.`,
-    fields:[
-      {name:"📋 Details",value:`**Category:** ${p.category}\n**Reviewer:** ${user}\n**Date:** ${new Date().toLocaleString("en-US")}`},
-      {name:"📝 Comment",value:comment.length>1000?comment.substring(0,997)+"...":comment}
-    ],
-    thumbnail:{url:p.image||"https://via.placeholder.com/64?text=📦"},
-    footer:{text:"Catalog • Reviews"},
-    timestamp:new Date().toISOString()
-  }]};
-
-  const res=await fetch("https://discord.com/api/webhooks/SEU_WEBHOOK",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-  if(!res.ok) throw new Error("Discord error");
 }
