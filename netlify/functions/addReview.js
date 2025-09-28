@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 
 export async function handler(event, context) {
-
+  // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -15,7 +15,10 @@ export async function handler(event, context) {
   }
 
   try {
-    const { productId, userName, rating, comment } = JSON.parse(event.body);
+    const body = JSON.parse(event.body);
+    const { productId, userName, rating, comment } = body;
+    
+    console.log('Adding review:', { productId, userName, rating, comment });
 
     if (!productId || !userName || !rating || !comment) {
       return {
@@ -32,8 +35,10 @@ export async function handler(event, context) {
     
     await sql`
       INSERT INTO reviews (product_id, user_name, rating, comment, created_at)
-      VALUES (${productId}, ${userName}, ${rating}, ${comment}, NOW())
+      VALUES (${parseInt(productId)}, ${userName}, ${parseInt(rating)}, ${comment}, NOW())
     `;
+
+    console.log('Review added successfully');
 
     return { 
       statusCode: 200, 
@@ -51,7 +56,10 @@ export async function handler(event, context) {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       },
-      body: JSON.stringify({ error: err.message }) 
+      body: JSON.stringify({ 
+        error: "Internal server error",
+        message: err.message 
+      }) 
     };
   }
 }
