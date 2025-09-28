@@ -1,63 +1,76 @@
-window.productCatalog = [
-  { id:1, name:"Designer Dashboard Pro", category:"Dashboard", description:"Professional dashboard for designers.", image:"https://www.magiacomputers.it/media/k2/items/cache/39eee751af30032eeece2f48de2de4ba_XL.jpg", link:"https://sketchfab.com/search?type=models"},
-  { id:2, name:"Workspace Analytics Tool", category:"Analytics", description:"Complete analysis tool.", image:"https://www.magiacomputers.it/media/k2/items/cache/39eee751af30032eeece2f48de2de4ba_XL.jpg", link:"#"},
-  { id:3, name:"Modern Web Templates", category:"Templates", description:"Modern web templates.", image:"https://www.magiacomputers.it/media/k2/items/cache/39eee751af30032eeece2f48de2de4ba_XL.jpg", link:"#"}
-];
-
-let products=[], currentProductId=null, selectedRating=0;
-
-document.addEventListener("DOMContentLoaded", () => {
-  products = window.productCatalog || [];
-  if(localStorage.getItem("darkMode")==="true"){
+document.addEventListener("DOMContentLoaded", async () => {
+  if (localStorage.getItem("darkMode") === "true") {
     document.body.classList.add("dark-mode");
-    document.getElementById("theme-toggle").textContent="Light Mode";
+    document.getElementById("theme-toggle").textContent = "Light Mode";
   }
+
   setupListeners();
+
+  // Fetch produtos do servidor
+  products = await fetchProducts();
+  
   displayProducts(products);
   populateCategories();
 });
 
-function setupListeners(){
-  document.getElementById("search-input").addEventListener("input", filterProducts);
-  document.getElementById("category-filter").addEventListener("change", filterProducts);
-  document.getElementById("rating-filter").addEventListener("change", filterProducts);
+function setupListeners(products) {
+  document.getElementById("search-input").addEventListener("input", () => filterProducts(products));
+  document.getElementById("category-filter").addEventListener("change", () => filterProducts(products));
+  document.getElementById("rating-filter").addEventListener("change", () => filterProducts(products));
   document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
   document.getElementById("close-modal").addEventListener("click", closeModal);
   document.getElementById("cancel-feedback").addEventListener("click", closeModal);
 
-  document.querySelectorAll(".star").forEach(s=>{
-    s.addEventListener("click",()=>{
-      selectedRating=parseInt(s.dataset.value);
-      updateStars(selectedRating);
-      document.getElementById("rating-value").value=selectedRating;
-    });
-    s.addEventListener("mouseover",()=>highlightStars(parseInt(s.dataset.value)));
-    s.addEventListener("mouseout",()=>updateStars(selectedRating));
+  document.querySelectorAll(".star").forEach(star => {
+    star.addEventListener("click", () => selectRating(star));
+    star.addEventListener("mouseover", () => highlightStars(parseInt(star.dataset.value)));
+    star.addEventListener("mouseout", () => highlightStars(selectedRating));
   });
 
-  document.getElementById("feedback-form").addEventListener("submit", submitFeedback);
+  document.getElementById("feedback-form").addEventListener("submit", e => submitFeedback(e, products));
 }
 
-function populateCategories(){
-  const select=document.getElementById("category-filter");
-  [...new Set(products.map(p=>p.category))].forEach(c=>{
-    const o=document.createElement("option");
-    o.value=c; o.textContent=c;
-    select.appendChild(o);
+let currentProductId = null, selectedRating = 0;
+
+async function populateCategories(products) {
+  const select = document.getElementById("category-filter");
+  [...new Set(products.map(p => p.category))].forEach(cat => {
+    const option = document.createElement("option");
+    option.value = cat;
+    option.textContent = cat;
+    select.appendChild(option);
   });
 }
+async function fetchProducts() {
+  try {
+    const res = await fetch("/.netlify/functions/getProducts");
+    if (!res.ok) throw new Error("Erro ao buscar produtos");
+    return await res.json();
+  } catch (err) {
 
-function displayProducts(list){
-  const c=document.getElementById("products-container");
-  c.innerHTML="";
-  if(!list.length){ c.innerHTML='<div class="no-results">No products found.</div>'; return; }
-  list.forEach(p=> c.appendChild(createCard(p)));
+    return [];
+  }
+}
+async function displayProducts(products) {
+  const container = document.getElementById("products-container");
+  container.innerHTML = "";
+  if (!products.length) {
+    container.innerHTML = '<div class="no-results">No products found.</div>';
+    return;
+  }
+
+  for (const p of products) {
+    const card = await createCard(p);
+    container.appendChild(card);
+  }
 }
 
-function createCard(p){
-  const avg = calcRating(p.id);
+async function createCard(p) {
   const card = document.createElement("div");
   card.className = "product-card";
+
+  const avg = await fetchAvgRating(p.id);
+
   card.innerHTML = `
     <img src="${p.image}" alt="${p.name}" class="product-image">
     <div class="product-info">
@@ -72,111 +85,95 @@ function createCard(p){
       <button class="feedback-btn" data-id="${p.id}" style="margin-top:.5rem;background:none;border:none;color:var(--primary);cursor:pointer;text-decoration:underline;">Rate</button>
     </div>
   `;
-  card.querySelector(".feedback-btn").addEventListener("click",()=>openModal(p.id));
+
+  card.querySelector(".feedback-btn").addEventListener("click", () => openModal(p.id));
   return card;
 }
 
-function calcRating(id){
-  const data=localStorage.getItem(`productRatings_${id}`);
-  if(!data) return 4;
-  const arr=JSON.parse(data);
-  if(!arr.length) return 4;
-  return arr.reduce((a,b)=>a+b.rating,0)/arr.length;
-}
-
-function genStars(r){
-  let s="", f=Math.floor(r), half=r%1>=.5;
-  for(let i=1;i<=5;i++){
-    s+=i<=f||i===f+1&&half?'<span class="star">★</span>':'<span class="star" style="color:#ccc;">★</span>';
+async function fetchAvgRating(productId) {
+  try {
+    const reviews = await fetch(`/.netlify/functions/getReviews?productId=${productId}`).then(r => r.json());
+    if (!reviews.length) return 4;
+    return reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+  } catch {
+    return 4;
   }
-  return s;
 }
 
-function openModal(id){
-  currentProductId=id;
-  const p=products.find(x=>x.id===id);
-  if(!p) return;
-  document.getElementById("modal-product-name").textContent=`Rate: ${p.name}`;
-  document.getElementById("product-id").value=id;
-  document.getElementById("feedback-form").reset();
-  selectedRating=0;
-  updateStars(0);
-  document.getElementById("feedback-modal").style.display="flex";
+function genStars(r) {
+  let html = "", f = Math.floor(r), half = r % 1 >= 0.5;
+  for (let i = 1; i <= 5; i++) {
+    html += i <= f || (i === f + 1 && half) ? '<span class="star">★</span>' : '<span class="star" style="color:#ccc;">★</span>';
+  }
+  return html;
 }
 
-function closeModal(){
-  document.getElementById("feedback-modal").style.display="none";
-  currentProductId=null;
+function openModal(id) {
+  currentProductId = id;
+  const product = [...document.querySelectorAll(".product-card")].find(c => c.querySelector(".feedback-btn").dataset.id === id)?.querySelector(".product-name").textContent;
+  document.getElementById("modal-product-name").textContent = `Rate: ${product}`;
+  document.getElementById("product-id").value = id;
+  selectedRating = 0;
+  highlightStars(0);
+  document.getElementById("feedback-modal").style.display = "flex";
 }
 
-function updateStars(r){
-  document.querySelectorAll("#rating-stars .star").forEach((s,i)=>s.style.color=i<r?"#ffc107":"#ccc");
+function closeModal() {
+  document.getElementById("feedback-modal").style.display = "none";
+  currentProductId = null;
 }
 
-function highlightStars(r){
-  document.querySelectorAll("#rating-stars .star").forEach((s,i)=>s.style.color=i<r?"#ffc107":"#ccc");
+function selectRating(star) {
+  selectedRating = parseInt(star.dataset.value);
+  document.getElementById("rating-value").value = selectedRating;
+  highlightStars(selectedRating);
 }
 
-function filterProducts(){
-  const s=document.getElementById("search-input").value.toLowerCase(),
-        c=document.getElementById("category-filter").value,
-        r=parseInt(document.getElementById("rating-filter").value);
-  displayProducts(products.filter(p=>{
-    const mS=p.name.toLowerCase().includes(s)||p.description.toLowerCase().includes(s);
-    const mC=!c||p.category===c;
-    const mR=!r||calcRating(p.id)>=r;
-    return mS && mC && mR;
-  }));
+function highlightStars(r) {
+  document.querySelectorAll("#rating-stars .star").forEach((s, i) => s.style.color = i < r ? "#ffc107" : "#ccc");
 }
 
-function toggleTheme(){
+function filterProducts(products) {
+  const search = document.getElementById("search-input").value.toLowerCase();
+  const category = document.getElementById("category-filter").value;
+  const minRating = parseInt(document.getElementById("rating-filter").value);
+
+  const filtered = products.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(search) || p.description.toLowerCase().includes(search);
+    const matchesCategory = !category || p.category === category;
+    const matchesRating = minRating === 0 || fetchAvgRating(p.id) >= minRating;
+    return matchesSearch && matchesCategory && matchesRating;
+  });
+
+  displayProducts(filtered);
+}
+
+function toggleTheme() {
   document.body.classList.toggle("dark-mode");
-  const dark=document.body.classList.contains("dark-mode");
-  localStorage.setItem("darkMode",dark);
-  document.getElementById("theme-toggle").textContent=dark?"Light Mode":"Dark Mode";
+  document.getElementById("theme-toggle").textContent = document.body.classList.contains("dark-mode") ? "Light Mode" : "Dark Mode";
 }
 
-async function submitFeedback(e){
+async function submitFeedback(e, products) {
   e.preventDefault();
-  const id=document.getElementById("product-id").value,
-        user=document.getElementById("user-name").value,
-        rating=parseInt(document.getElementById("rating-value").value),
-        comment=document.getElementById("comment").value;
-  if(!id||!user||!rating||!comment){ alert("Please fill all fields."); return; }
+  const id = document.getElementById("product-id").value;
+  const user = document.getElementById("user-name").value;
+  const rating = parseInt(document.getElementById("rating-value").value);
+  const comment = document.getElementById("comment").value;
 
-  const key=`productRatings_${id}`;
-  const data=JSON.parse(localStorage.getItem(key)||"[]");
-  data.push({user,rating,comment});
-  localStorage.setItem(key,JSON.stringify(data));
+  if (!id || !user || !rating || !comment) { alert("Fill all fields."); return; }
 
   try {
-    await sendDiscord(id,user,rating,comment);
-  } catch(err) {
-    console.error("Error sending to Discord:", err);
+    await fetch(`/.netlify/functions/addReview`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId: id, userName: user, rating, comment })
+    });
+
+    closeModal();
+    displayProducts(products);
+    alert("Review submitted!");
+  } catch (err) {
+    console.error(err);
+    alert("Error submitting review.");
   }
-
-  closeModal();
-  displayProducts(products);
-  alert("Review submitted!");
-}
-
-async function sendDiscord(id,user,rating,comment){
-  const p=products.find(x=>x.id==id);
-  if(!p) return;
-  const color=rating>=4?0x00ff00:rating>=3?0xffff00:0xff0000;
-  const body={embeds:[{
-    title:`⭐ ${rating}/5 - New Review`,
-    color,
-    description:`**${p.name}** received a new review.`,
-    fields:[
-      {name:"📋 Details",value:`**Category:** ${p.category}\n**Reviewer:** ${user}\n**Date:** ${new Date().toLocaleString("en-US")}`},
-      {name:"📝 Comment",value:comment.length>1000?comment.substring(0,997)+"...":comment}
-    ],
-    thumbnail:{url:p.image||"https://via.placeholder.com/64?text=📦"},
-    footer:{text:"Catalog • Reviews"},
-    timestamp:new Date().toISOString()
-  }]};
-
-  const res=await fetch("https://discord.com/api/webhooks/1421548516865478677/dH7OCHs4IrrQk2_w6ZsodZISmT1aDTd6IfrXm6b-rT7C83jxqGE9Bf3pBqFGdVxxZ8rp",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-  if(!res.ok) throw new Error("Discord error");
 }
