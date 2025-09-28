@@ -4,7 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Product Catalog</title>
+<!-- Adicionar reCAPTCHA -->
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <style>
+/* Seu CSS existente permanece igual */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
@@ -502,10 +505,18 @@ main {
   line-height: 1.6;
 }
 
+/* Estilos para o reCAPTCHA */
+.recaptcha-container {
+  margin: 1.5rem 0;
+  display: flex;
+  justify-content: center;
+}
+
 .form-actions { 
   display: flex; 
   justify-content: flex-end; 
   gap: 1rem; 
+  margin-top: 1.5rem;
 }
 
 .submit-btn, .cancel-btn { 
@@ -529,6 +540,13 @@ main {
   background: var(--primary-hover);
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
+}
+
+.submit-btn:disabled {
+  background: var(--secondary);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--shadow);
 }
 
 .cancel-btn { 
@@ -716,17 +734,21 @@ img {
       <input type="hidden" id="rating-value" required />
       <label for="comment">Comment:</label>
       <textarea id="comment" required></textarea>
-      <div class="g-recaptcha" data-sitekey="6LdOEdgrAAAAANKOW3tk8LYlR4x2aL0KXtb0fwj-"></div>
+      
+      <!-- Container para o reCAPTCHA -->
+      <div class="recaptcha-container">
+        <div class="g-recaptcha" data-sitekey="6LdOEdgrAAAAAN7VCLzmZj1ilE0frmol09Hfd-4V"></div>
+      </div>
+      
       <div class="form-actions">
         <button type="button" class="cancel-btn" id="cancel-feedback">Cancel</button>
-        <button type="submit" class="submit-btn">Submit Review</button>
+        <button type="submit" class="submit-btn" id="submit-review-btn">Submit Review</button>
       </div>
     </form>
   </div>
 </div>
 
 <script src="main.js"></script>
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   document.addEventListener('contextmenu', function(e) {
@@ -797,6 +819,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
-
-
-
