@@ -13,10 +13,7 @@ export async function handler(event) {
       ORDER BY created_at DESC
     `;
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify(reviews),
-    };
+    return { statusCode: 200, body: JSON.stringify(reviews) };
   } catch (err) {
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
