@@ -1,7 +1,7 @@
 const { neon } = require('@neondatabase/serverless');
 
 exports.handler = async function(event, context) {
-  // Handle CORS
+
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -43,3 +43,4 @@ exports.handler = async function(event, context) {
     };
   }
 };
+
