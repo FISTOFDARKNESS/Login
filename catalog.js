@@ -43,7 +43,7 @@ async function populateCategories(products) {
 }
 async function fetchProducts() {
   try {
-    const res = await fetch("/.netlify/functions/getProducts");
+    const res = await fetch("/netlify/functions/getProducts");
     if (!res.ok) throw new Error("Erro ao buscar produtos");
     return await res.json();
   } catch (err) {
@@ -92,7 +92,7 @@ async function createCard(p) {
 
 async function fetchAvgRating(productId) {
   try {
-    const reviews = await fetch(`/.netlify/functions/getReviews?productId=${productId}`).then(r => r.json());
+    const reviews = await fetch(`/netlify/functions/getReviews?productId=${productId}`).then(r => r.json());
     if (!reviews.length) return 4;
     return reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
   } catch {
@@ -163,7 +163,7 @@ async function submitFeedback(e, products) {
   if (!id || !user || !rating || !comment) { alert("Fill all fields."); return; }
 
   try {
-    await fetch(`/.netlify/functions/addReview`, {
+    await fetch(`/netlify/functions/addReview`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ productId: id, userName: user, rating, comment })
@@ -177,3 +177,4 @@ async function submitFeedback(e, products) {
     alert("Error submitting review.");
   }
 }
+
