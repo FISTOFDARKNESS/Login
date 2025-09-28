@@ -5,7 +5,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.body.classList.add("dark-mode");
     document.getElementById("theme-toggle").textContent = "Light Mode";
   }
-  fetchProducts();
+  
+  // CORREÇÃO: Aguardar o fetchProducts() antes de continuar
+  products = await fetchProducts();
   setupListeners(products);
   displayProducts(products);
   populateCategories(products);
@@ -33,7 +35,8 @@ async function fetchProducts() {
     const res = await fetch("/.netlify/functions/getProducts");
     if (!res.ok) throw new Error("Erro ao buscar produtos");
     return await res.json();
-  } catch {
+  } catch (error) {
+    console.error("Fetch error:", error);
     return [];
   }
 }
@@ -79,10 +82,13 @@ async function createCard(p) {
 
 async function fetchAvgRating(productId) {
   try {
-    const reviews = await fetch(`/.netlify/functions/getReviews?productId=${productId}`).then(r => r.json());
+    const res = await fetch(`/.netlify/functions/getReviews?productId=${productId}`);
+    if (!res.ok) return 4;
+    const reviews = await res.json();
     if (!reviews.length) return 4;
     return reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
-  } catch {
+  } catch (error) {
+    console.error("Rating fetch error:", error);
     return 4;
   }
 }
@@ -151,22 +157,24 @@ async function submitFeedback(e, products) {
   if (!id || !user || !rating || !comment) { alert("Fill all fields."); return; }
 
   try {
-    await fetch(`/.netlify/functions/addReview`, {
+    const res = await fetch(`/.netlify/functions/addReview`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ productId: id, userName: user, rating, comment })
     });
 
+    if (!res.ok) throw new Error("Failed to submit review");
+
     closeModal();
     displayProducts(products);
     alert("Review submitted!");
   } catch (err) {
-    console.error(err);
+    console.error("Submit error:", err);
     alert("Error submitting review.");
   }
 }
 
-async function populateCategories(products) {
+function populateCategories(products) {
   const select = document.getElementById("category-filter");
   select.innerHTML = '<option value="">All categories</option>';
   [...new Set(products.map(p => p.category))].forEach(cat => {
