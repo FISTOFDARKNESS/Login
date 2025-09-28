@@ -14,12 +14,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function loadProducts() {
   try {
+    console.log('Loading products from Neon...');
     products = await fetchProducts();
+    console.log('Products loaded:', products);
     displayProducts(products);
     populateCategories(products);
   } catch (error) {
-    console.error("Failed to load products:", error);
-    displayError("Failed to load products. Please refresh the page.");
+    console.error("Failed to load products from Neon:", error);
+    displayError("Failed to load products from database. Please check the console for details.");
   }
 }
 
@@ -43,50 +45,36 @@ function setupListeners() {
 
 async function fetchProducts() {
   try {
-    const res = await fetch("/.netlify/functions/getProducts");
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
+    const response = await fetch("/.netlify/functions/getProducts");
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
     }
-    return await res.json();
+    
+    const products = await response.json();
+    
+    // Verifica se a resposta é um array válido
+    if (!Array.isArray(products)) {
+      throw new Error('Invalid response format: expected array but got ' + typeof products);
+    }
+    
+    return products;
   } catch (error) {
-    console.error("Fetch error:", error);
-    // Return mock data for development
-    return getMockProducts();
+    console.error("Fetch products error:", error);
+    throw error;
   }
-}
-
-function getMockProducts() {
-  return [
-    {
-      id: 1,
-      name: "Smartphone XYZ",
-      category: "Electronics",
-      description: "Latest smartphone with amazing features",
-      image: "https://via.placeholder.com/300x200/4a6fa5/ffffff?text=Smartphone",
-      link: "https://example.com"
-    },
-    {
-      id: 2,
-      name: "Wireless Headphones",
-      category: "Electronics",
-      description: "Noise cancelling wireless headphones",
-      image: "https://via.placeholder.com/300x200/4a6fa5/ffffff?text=Headphones",
-      link: "https://example.com"
-    },
-    {
-      id: 3,
-      name: "Coffee Maker",
-      category: "Home Appliances",
-      description: "Automatic coffee maker with timer",
-      image: "https://via.placeholder.com/300x200/4a6fa5/ffffff?text=Coffee+Maker",
-      link: "https://example.com"
-    }
-  ];
 }
 
 function displayError(message) {
   const container = document.getElementById("products-container");
-  container.innerHTML = `<div class="no-results">${message}</div>`;
+  container.innerHTML = `
+    <div class="no-results">
+      <h3>Error</h3>
+      <p>${message}</p>
+      <p>Check the browser console for more details.</p>
+    </div>
+  `;
 }
 
 async function displayProducts(list) {
@@ -94,7 +82,7 @@ async function displayProducts(list) {
   container.innerHTML = "";
   
   if (!list || !list.length) {
-    container.innerHTML = '<div class="no-results">No products found.</div>';
+    container.innerHTML = '<div class="no-results">No products found in database.</div>';
     return;
   }
 
@@ -109,6 +97,7 @@ async function createCard(p) {
   card.className = "product-card";
 
   const avgRating = await fetchAvgRating(p.id);
+  console.log(`Product ${p.id} average rating:`, avgRating);
 
   card.innerHTML = `
     <img src="${p.image}" alt="${p.name}" class="product-image" onerror="this.src='https://via.placeholder.com/300x200/cccccc/666666?text=No+Image'">
@@ -131,13 +120,26 @@ async function createCard(p) {
 
 async function fetchAvgRating(productId) {
   try {
-    const res = await fetch(`/.netlify/functions/getReviews?productId=${productId}`);
-    if (!res.ok) return 0;
-    const reviews = await res.json();
-    if (!reviews.length) return 0;
-    return reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+    console.log(`Fetching reviews for product ${productId}...`);
+    const response = await fetch(`/.netlify/functions/getReviews?productId=${productId}`);
+    
+    if (!response.ok) {
+      console.warn(`Failed to fetch reviews for product ${productId}:`, response.status);
+      return 0;
+    }
+    
+    const reviews = await response.json();
+    console.log(`Reviews for product ${productId}:`, reviews);
+    
+    if (!Array.isArray(reviews) || !reviews.length) {
+      return 0;
+    }
+    
+    const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+    console.log(`Calculated average for product ${productId}:`, avg);
+    return avg;
   } catch (error) {
-    console.error("Rating fetch error:", error);
+    console.warn(`Rating fetch error for product ${productId}:`, error.message);
     return 0;
   }
 }
@@ -232,7 +234,8 @@ async function submitFeedback(e) {
   }
 
   try {
-    const res = await fetch(`/.netlify/functions/addReview`, {
+    console.log('Submitting review to Neon...', { id, user, rating, comment });
+    const response = await fetch(`/.netlify/functions/addReview`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
@@ -243,19 +246,21 @@ async function submitFeedback(e) {
       })
     });
 
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
     }
 
-    const result = await res.json();
+    const result = await response.json();
+    console.log('Review submitted successfully:', result);
 
     closeModal();
-    // Refresh the display to show updated ratings
+    // Recarregar os produtos para atualizar as avaliações
     await loadProducts();
     alert("Review submitted successfully!");
   } catch (err) {
     console.error("Submit error:", err);
-    alert("Review submitted (demo mode)! In production, this would save to database.");
+    alert("Error submitting review: " + err.message);
   }
 }
 
