@@ -17,8 +17,6 @@ export async function handler(event, context) {
   try {
     const body = JSON.parse(event.body);
     const { productId, userName, rating, comment } = body;
-    
-    console.log('Adding review:', { productId, userName, rating, comment });
 
     if (!productId || !userName || !rating || !comment) {
       return {
@@ -31,14 +29,15 @@ export async function handler(event, context) {
       };
     }
 
-    const sql = neon(process.env.DATABASE_URL);
+    // ✅ COLOCA A SUA CONNECTION STRING AQUI DIRETAMENTE
+    const connectionString = "postgresql://neondb_owner:npg_mgw4DTLjik8l@ep-autumn-rice-ae1jy1wl-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require";
+    
+    const sql = neon(connectionString);
     
     await sql`
       INSERT INTO reviews (product_id, user_name, rating, comment, created_at)
       VALUES (${parseInt(productId)}, ${userName}, ${parseInt(rating)}, ${comment}, NOW())
     `;
-
-    console.log('Review added successfully');
 
     return { 
       statusCode: 200, 
