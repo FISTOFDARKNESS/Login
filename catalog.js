@@ -181,5 +181,3 @@ async function submitFeedback(e, products) {
     alert("Error submitting review.");
   }
 }
-
-
