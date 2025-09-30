@@ -177,7 +177,7 @@ async function createCard(p) {
         <div class="stars">${generateStars(avgRating)}</div>
         <span class="rating-value">${avgRating.toFixed(1)}</span>
       </div>
-      <a href="${p.link}" target="_blank" class="product-link">View Product</a>
+      <a href="${p.link}" target="_blank" class="product-link">Buy Product</a>
       <button class="feedback-btn" data-id="${p.id}" style="margin-top:.5rem;background:none;border:none;color:var(--primary);cursor:pointer;text-decoration:underline;">Rate</button>
     </div>
   `;
@@ -376,3 +376,4 @@ function populateCategories(products) {
     select.appendChild(option);
   });
 }
+
