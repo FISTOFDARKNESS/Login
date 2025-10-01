@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#000000"/>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>User Profile</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  --bg-solid: #f8fafc;
+  --fg: #1e293b;
+  --card: rgba(255, 255, 255, 0.95);
+  --border: rgba(226, 232, 240, 0.8);
+  --primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --primary-hover: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  --secondary: #64748b;
+  --hover: rgba(99, 102, 241, 0.05);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --accent: #f59e0b;
+  --success: #10b981;
+  --glass: rgba(255, 255, 255, 0.25);
+  --backdrop: backdrop-filter: blur(10px);
+}
+
+.dark-mode {
+  --bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  --bg-solid: #0f172a;
+  --fg: #f1f5f9;
+  --card: rgba(30, 41, 59, 0.95);
+  --border: rgba(71, 85, 105, 0.6);
+  --primary: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  --primary-hover: linear-gradient(135deg, #6d28d9 0%, #9333ea 100%);
+  --secondary: #94a3b8;
+  --hover: rgba(139, 92, 246, 0.1);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  --glass: rgba(30, 41, 59, 0.4);
+}
+
+* { 
+  margin: 0; 
+  padding: 0; 
+  box-sizing: border-box; 
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body { 
+  background: var(--bg);
+  color: var(--fg); 
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+header { 
+  background: var(--card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 1.5rem 0; 
+  box-shadow: var(--shadow);
+  position: sticky; 
+  top: 0; 
+  z-index: 100;
+  border-bottom: 1px solid var(--border);
+}
+
+.header-content { 
+  max-width: 1400px; 
+  margin: auto; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  flex-wrap: wrap; 
+  gap: 1.5rem;
+  padding: 0 2rem;
+}
+
+h1 { 
+  background: var(--primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 2.5rem; 
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.controls { 
+  display: flex; 
+  gap: 1rem; 
+  flex-wrap: wrap; 
+  align-items: center; 
+}
+
+.theme-toggle { 
+  padding: 0.75rem 1rem; 
+  border-radius: 12px; 
+  border: none; 
+  background: var(--primary);
+  color: white; 
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.theme-toggle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.theme-toggle:hover::before {
+  left: 100%;
+}
+
+.theme-toggle:hover { 
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+main { 
+  max-width: 1400px; 
+  margin: 3rem auto; 
+  padding: 0 2rem; 
+}
+
+.profile-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.profile-header {
+  background: var(--card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.5rem;
+  position: relative;
+}
+
+.profile-picture {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--border);
+  box-shadow: var(--shadow-lg);
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.profile-name {
+  font-size: 2rem;
+  font-weight: 700;
+  background: var(--primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.profile-email {
+  color: var(--secondary);
+  font-size: 1.1rem;
+}
+
+.profile-stats {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.stat-label {
+  color: var(--secondary);
+  font-size: 0.9rem;
+}
+
+.auth-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2.5rem;
+  background: var(--card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+.auth-message {
+  font-size: 1.2rem;
+  color: var(--secondary);
+  max-width: 500px;
+  line-height: 1.6;
+}
+
+.g_id_signin {
+  margin: 1rem 0;
+}
+
+.logout-btn {
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  border: none;
+  background: #ef4444;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.logout-btn:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.products-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.section-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  background: var(--primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1rem;
+}
+
+.products-grid { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+  gap: 2rem; 
+}
+
+.product-card { 
+  background: var(--card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 20px; 
+  overflow: hidden; 
+  box-shadow: var(--shadow);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+  display: flex; 
+  flex-direction: column;
+  border: 1px solid var(--border);
+  position: relative;
+}
+
+.product-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--primary);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.product-card:hover::before {
+  transform: scaleX(1);
+}
+
+.product-card:hover { 
+  transform: translateY(-8px) scale(1.02); 
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent);
+}
+
+.product-image { 
+  width: 100%; 
+  height: 220px; 
+  object-fit: cover;
+  transition: transform 0.4s ease;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.product-card:hover .product-image {
+  transform: scale(1.05);
+}
+
+.product-info { 
+  padding: 1.5rem; 
+  flex-grow: 1; 
+  display: flex; 
+  flex-direction: column; 
+}
+
+.product-category { 
+  color: var(--secondary); 
+  font-size: 0.85rem; 
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.product-name { 
+  font-size: 1.3rem; 
+  margin-bottom: 0.75rem; 
+  background: var(--primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.product-description { 
+  font-size: 0.95rem; 
+  margin-bottom: 1.5rem; 
+  flex-grow: 1;
+  color: var(--secondary);
+  line-height: 1.6;
+}
+
+.product-rating { 
+  display: flex; 
+  align-items: center; 
+  margin-bottom: 1.5rem; 
+}
+
+.stars { 
+  display: flex; 
+  margin-right: 0.75rem; 
+}
+
+.star { 
+  color: var(--accent); 
+  font-size: 1.1rem; 
+  cursor: pointer;
+  transition: all 0.2s ease;
+  filter: drop-shadow(0 1px 2px rgba(245, 158, 11, 0.3));
+}
+
+.star:hover {
+  transform: scale(1.2);
+}
+
+.rating-value { 
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.product-link { 
+  background: var(--primary);
+  color: white; 
+  text-align: center; 
+  padding: 1rem; 
+  border-radius: 12px; 
+  text-decoration: none; 
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+  margin-top: auto;
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.product-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.product-link:hover::before {
+  left: 100%;
+}
+
+.product-link:hover { 
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.no-products {
+  text-align: center;
+  padding: 3rem;
+  color: var(--secondary);
+  font-size: 1.1rem;
+  grid-column: 1/-1;
+}
+
+.nav-link {
+  color: var(--fg);
+  text-decoration: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  background: var(--hover);
+  border-color: var(--accent);
+}
+
+@media(max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0 1rem;
+  } 
+  
+  .controls {
+    justify-content: center;
+  } 
+  
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  main {
+    padding: 0 1rem;
+    margin: 2rem auto;
+  }
+  
+  h1 {
+    font-size: 2rem;
+  }
+  
+  .profile-header {
+    padding: 2rem;
+  }
+  
+  .profile-picture {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .profile-name {
+    font-size: 1.6rem;
+  }
+  
+  .profile-stats {
+    gap: 1.5rem;
+  }
+}
+
+@media(max-width: 480px) {
+  .products-grid {
+    grid-template-columns: 1fr;
+  } 
+  
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+  } 
+  
+  .profile-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .auth-section {
+    padding: 1.5rem;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.loading {
+  background: linear-gradient(90deg, var(--card) 25%, var(--hover) 50%, var(--card) 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
+}
+
+::selection {
+  background: transparent;
+}
+
+::-moz-selection {
+  background: transparent;
+}
+
+*::before, *::after {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.no-context-menu {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+@media print {
+  body { display: none !important; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-content">
+    <h1>User Profile</h1>
+    <div class="controls">
+      <a href="index.html" class="nav-link">Back to Catalog</a>
+      <button id="theme-toggle" class="theme-toggle">Dark Mode</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="profile-container">
+    <div class="profile-header" id="profile-header" style="display: none;">
+      <img src="" alt="Profile Picture" class="profile-picture" id="profile-picture">
+      <div class="profile-info">
+        <h2 class="profile-name" id="profile-name">User Name</h2>
+        <p class="profile-email" id="profile-email">user@example.com</p>
+      </div>
+      <div class="profile-stats">
+        <div class="stat">
+          <span class="stat-value" id="products-count">0</span>
+          <span class="stat-label">Products</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="reviews-count">0</span>
+          <span class="stat-label">Reviews</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="joined-date">-</span>
+          <span class="stat-label">Joined</span>
+        </div>
+      </div>
+      <button class="logout-btn" id="logout-btn">Logout</button>
+    </div>
+
+    <div class="auth-section" id="auth-section">
+      <h2>Sign In Required</h2>
+      <p class="auth-message">You need to sign in with your Google account to view profiles and products. This helps us maintain a secure community for all users.</p>
+      <div id="g_id_onload"
+           data-client_id="308189275559-463hh72v4qto39ike23emrtc4r51galf.apps.googleusercontent.com"
+           data-context="signin"
+           data-ux_mode="popup"
+           data-callback="handleGoogleSignIn"
+           data-auto_prompt="false">
+      </div>
+      <div class="g_id_signin"
+           data-type="standard"
+           data-shape="rectangular"
+           data-theme="outline"
+           data-text="signin_with"
+           data-size="large"
+           data-logo_alignment="left">
+      </div>
+    </div>
+
+    <div class="products-section" id="products-section" style="display: none;">
+      <h2 class="section-title">My Products</h2>
+      <div class="products-grid" id="products-container"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const themeToggle = document.getElementById('theme-toggle');
+  
+  const currentTheme = localStorage.getItem('theme') || 'light';
+  if (currentTheme === 'dark') {
+    document.body.classList.add('dark-mode');
+    themeToggle.textContent = 'Light Mode';
+  }
+  
+  themeToggle.addEventListener('click', function() {
+    document.body.classList.toggle('dark-mode');
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    themeToggle.textContent = isDarkMode ? 'Light Mode' : 'Dark Mode';
+  });
+
+  checkLoginStatus();
+  
+  document.getElementById('logout-btn').addEventListener('click', function() {
+    localStorage.removeItem('userProfile');
+    checkLoginStatus();
+  });
+});
+
+function handleGoogleSignIn(response) {
+  const userProfile = {
+    name: response.credential.name,
+    email: response.credential.email,
+    picture: response.credential.picture,
+    joined: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+  };
+  
+  localStorage.setItem('userProfile', JSON.stringify(userProfile));
+  checkLoginStatus();
+}
+
+function checkLoginStatus() {
+  const userProfile = JSON.parse(localStorage.getItem('userProfile'));
+  const profileHeader = document.getElementById('profile-header');
+  const authSection = document.getElementById('auth-section');
+  const productsSection = document.getElementById('products-section');
+  
+  if (userProfile) {
+    profileHeader.style.display = 'flex';
+    authSection.style.display = 'none';
+    productsSection.style.display = 'block';
+    
+    document.getElementById('profile-name').textContent = userProfile.name;
+    document.getElementById('profile-email').textContent = userProfile.email;
+    document.getElementById('profile-picture').src = userProfile.picture;
+    document.getElementById('joined-date').textContent = userProfile.joined;
+    
+    loadUserProducts();
+  } else {
+    profileHeader.style.display = 'none';
+    authSection.style.display = 'flex';
+    productsSection.style.display = 'none';
+  }
+}
+
+function loadUserProducts() {
+  const productsContainer = document.getElementById('products-container');
+  const productsCount = document.getElementById('products-count');
+  
+  const userProducts = [
+    {
+      id: 1,
+      name: "Premium Wireless Headphones",
+      category: "Electronics",
+      description: "High-quality wireless headphones with noise cancellation and 30-hour battery life.",
+      image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+      rating: 4.5
+    },
+    {
+      id: 2,
+      name: "Ergonomic Office Chair",
+      category: "Furniture",
+      description: "Comfortable office chair with lumbar support and adjustable height.",
+      image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+      rating: 4.2
+    },
+    {
+      id: 3,
+      name: "Smart Fitness Watch",
+      category: "Wearables",
+      description: "Track your fitness goals with this advanced smartwatch featuring heart rate monitoring.",
+      image: "https://images.unsplash.com/photo-1544117519-31a4b719223d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+      rating: 4.7
+    }
+  ];
+  
+  productsCount.textContent = userProducts.length;
+  
+  productsContainer.innerHTML = '';
+  
+  if (userProducts.length > 0) {
+    userProducts.forEach(product => {
+      const productCard = document.createElement('div');
+      productCard.className = 'product-card';
+      
+      let starsHtml = '';
+      const fullStars = Math.floor(product.rating);
+      const hasHalfStar = product.rating % 1 >= 0.5;
+      
+      for (let i = 1; i <= 5; i++) {
+        if (i <= fullStars) {
+          starsHtml += '<span class="star">★</span>';
+        } else if (i === fullStars + 1 && hasHalfStar) {
+          starsHtml += '<span class="star">★</span>';
+        } else {
+          starsHtml += '<span class="star" style="color: var(--secondary)">★</span>';
+        }
+      }
+      
+      productCard.innerHTML = `
+        <img src="${product.image}" alt="${product.name}" class="product-image">
+        <div class="product-info">
+          <div class="product-category">${product.category}</div>
+          <div class="product-name">${product.name}</div>
+          <div class="product-description">${product.description}</div>
+          <div class="product-rating">
+            <div class="stars">${starsHtml}</div>
+            <div class="rating-value">${product.rating}</div>
+          </div>
+          <a href="#" class="product-link">View Details</a>
+        </div>
+      `;
+      
+      productsContainer.appendChild(productCard);
+    });
+  } else {
+    productsContainer.innerHTML = '<div class="no-products">You haven\'t added any products yet.</div>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    return false;
+  });
+
+  document.addEventListener('selectstart', function(e) {
+    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  document.addEventListener('dragstart', function(e) {
+    e.preventDefault();
+    return false;
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && (e.keyCode === 65 || e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 88 || e.keyCode === 85 || e.keyCode === 83 || e.keyCode === 80)) {
+      if (!(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+        e.preventDefault();
+        return false;
+      }
+    }
+    if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && e.keyCode === 73) || (e.ctrlKey && e.shiftKey && e.keyCode === 74)) {
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  document.addEventListener('mousedown', function(e) {
+    if (e.button === 1) {
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  document.addEventListener('copy', function(e) {
+    if (!(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+      e.clipboardData.setData('text/plain', '');
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  setInterval(function() {
+    if (window.devtools && window.devtools.open) {
+      window.location.reload();
+    }
+  }, 500);
+
+  let devtools = {open: false};
+  setInterval(function() {
+    let threshold = 160;
+    if (window.outerHeight - window.innerHeight > threshold || 
+        window.outerWidth - window.innerWidth > threshold) {
+      if (!devtools.open) {
+        devtools.open = true;
+        document.body.innerHTML = '<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;color:red;">Stop Trying Use Develper Tool or We gonna ban your IP, your Ip is already sended to us</div>';
+      }
+    } else {
+      devtools.open = false;
+    }
+  }, 500);
+});
+</script>
+</body>
+</html>
