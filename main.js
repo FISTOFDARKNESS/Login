@@ -1,50 +1,49 @@
 let products = [], currentProductId = null, selectedRating = 0;
 const SITE_KEY = '6LdvNN8rAAAAADmepCKuP7jeUpwOdtrF8K-4X5R6';
 
+window.addEventListener("load", () => {
+  if (typeof grecaptcha === "undefined") {
+    const script = document.createElement("script");
+    script.src = `https://www.google.com/recaptcha/api.js?render=${SITE_KEY}`;
+    document.head.appendChild(script);
+  }
+});
+
 document.addEventListener("DOMContentLoaded", async () => {
-  // Theme setup
   if (localStorage.getItem("darkMode") === "true") {
     document.body.classList.add("dark-mode");
     document.getElementById("theme-toggle").textContent = "Light Mode";
   }
-  
-  // Load products
   await loadProducts();
   setupListeners();
 });
 
 async function loadProducts() {
   try {
-    console.log('Loading products from Neon...');
     products = await fetchProducts();
-    console.log('Products loaded:', products);
     displayProducts(products);
     populateCategories(products);
   } catch (error) {
-    console.error("Failed to load products from Neon:", error);
-    displayError("Failed to load products from database. Please check the console for details.");
+    displayError("Failed to load products from database.");
   }
 }
 
 function setupListeners() {
-  document.getElementById("search-input").addEventListener("input", () => filterProducts());
-  document.getElementById("category-filter").addEventListener("change", () => filterProducts());
-  document.getElementById("rating-filter").addEventListener("change", () => filterProducts());
+  document.getElementById("search-input").addEventListener("input", filterProducts);
+  document.getElementById("category-filter").addEventListener("change", filterProducts);
   document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
   document.getElementById("close-modal").addEventListener("click", closeModal);
   document.getElementById("cancel-feedback").addEventListener("click", closeModal);
 
-  // Star rating functionality
   document.querySelectorAll("#rating-stars .star").forEach(star => {
     star.addEventListener("click", () => selectRating(star));
     star.addEventListener("mouseover", () => highlightStars(parseInt(star.dataset.value)));
     star.addEventListener("mouseout", () => highlightStars(selectedRating));
   });
 
-  document.getElementById("feedback-form").addEventListener("submit", e => submitFeedback(e));
-  
-  // Adicionar reCAPTCHA v3 aos botões "View Product"
-  document.addEventListener('click', function(e) {
+  document.getElementById("feedback-form").addEventListener("submit", submitFeedback);
+
+  document.addEventListener('click', e => {
     if (e.target.classList.contains('product-link')) {
       e.preventDefault();
       handleViewProduct(e.target.href);
@@ -52,329 +51,166 @@ function setupListeners() {
   });
 }
 
-// Função para executar reCAPTCHA v3
-async function executeRecaptcha(action = 'submit') {
+async function executeRecaptcha(action='submit') {
   return new Promise((resolve, reject) => {
-    if (typeof grecaptcha === 'undefined') {
-      reject(new Error('reCAPTCHA not loaded'));
-      return;
-    }
-    
+    if (typeof grecaptcha === 'undefined') return reject('reCAPTCHA not loaded');
     grecaptcha.ready(async () => {
-      try {
-        const token = await grecaptcha.execute(SITE_KEY, { action });
-        resolve(token);
-      } catch (error) {
-        reject(error);
-      }
+      try { resolve(await grecaptcha.execute(SITE_KEY, { action })); }
+      catch (err) { reject(err); }
     });
   });
 }
 
-// Função para verificar reCAPTCHA no servidor
 async function verifyRecaptcha(token) {
   try {
-    const response = await fetch('/.netlify/functions/verifyRecaptcha', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ token })
+    const res = await fetch('/.netlify/functions/verifyRecaptcha', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ token })
     });
-    
-    const result = await response.json();
-    return result.success && result.score > 0.5; // Score mínimo de 0.5
-  } catch (error) {
-    console.error('reCAPTCHA verification error:', error);
-    return false;
-  }
+    const result = await res.json();
+    return result.success && result.score > 0.5;
+  } catch { return false; }
 }
 
-// Função para lidar com "View Product" com reCAPTCHA v3
 async function handleViewProduct(url) {
+  const newTab = window.open('', '_blank');
   try {
-    // Executar reCAPTCHA v3
     const token = await executeRecaptcha('view_product');
-    
-    // Verificar o token do reCAPTCHA
-    const isValid = await verifyRecaptcha(token);
-    
-    if (isValid) {
-      // Se válido, redirecionar para o produto
-      window.open(url, '_blank');
-    } else {
-      alert('Security verification failed. Please try again.');
-    }
-  } catch (error) {
-    console.error('reCAPTCHA error:', error);
-    alert('Security verification error. Please try again.');
-  }
+    const valid = await verifyRecaptcha(token);
+    if (valid) newTab.location.href = url;
+    else { newTab.close(); alert('Security verification failed'); }
+  } catch { newTab.close(); alert('Security verification error'); }
 }
 
 async function fetchProducts() {
-  try {
-    const response = await fetch("/.netlify/functions/getProducts");
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
-    }
-    
-    const products = await response.json();
-    
-    // Verifica se a resposta é um array válido
-    if (!Array.isArray(products)) {
-      throw new Error('Invalid response format: expected array but got ' + typeof products);
-    }
-    
-    return products;
-  } catch (error) {
-    console.error("Fetch products error:", error);
-    throw error;
-  }
+  const res = await fetch("/.netlify/functions/getProducts");
+  if (!res.ok) throw new Error("Failed to fetch products");
+  const data = await res.json();
+  if (!Array.isArray(data)) throw new Error("Invalid products format");
+  return data;
 }
 
 function displayError(message) {
-  const container = document.getElementById("products-container");
-  container.innerHTML = `
-    <div class="no-results">
-      <h3>Error</h3>
-      <p>${message}</p>
-      <p>Check the browser console for more details.</p>
-    </div>
-  `;
+  document.getElementById("products-container").innerHTML = `<div class="no-results"><h3>Error</h3><p>${message}</p></div>`;
 }
 
 async function displayProducts(list) {
   const container = document.getElementById("products-container");
   container.innerHTML = "";
-  
-  if (!list || !list.length) {
-    container.innerHTML = '<div class="no-results">No products found in database.</div>';
-    return;
-  }
-
-  for (const p of list) {
-    const card = await createCard(p);
-    container.appendChild(card);
-  }
+  if (!list.length) { container.innerHTML='<div class="no-results">No products found.</div>'; return; }
+  for (const p of list) container.appendChild(await createCard(p));
 }
 
 async function createCard(p) {
   const card = document.createElement("div");
   card.className = "product-card";
-
   const avgRating = await fetchAvgRating(p.id);
-  console.log(`Product ${p.id} average rating:`, avgRating);
-
   card.innerHTML = `
-    <img src="${p.image}" alt="${p.name}" class="product-image" onerror="this.src='https://via.placeholder.com/300x200/cccccc/666666?text=No+Image'">
+    <img src="${p.image}" alt="${p.name}" class="product-image" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
     <div class="product-info">
       <div class="product-category">${p.category}</div>
       <h3 class="product-name">${p.name}</h3>
       <p class="product-description">${p.description}</p>
-      <div class="product-rating">
-        <div class="stars">${generateStars(avgRating)}</div>
-        <span class="rating-value">${avgRating.toFixed(1)}</span>
-      </div>
-      <a href="${p.link}" target="_blank" class="product-link">Buy Product</a>
+      <div class="product-rating"><div class="stars">${generateStars(avgRating)}</div><span class="rating-value">${avgRating.toFixed(1)}</span></div>
+      <a href="${p.link}" class="product-link">Buy Product</a>
       <button class="feedback-btn" data-id="${p.id}" style="margin-top:.5rem;background:none;border:none;color:var(--primary);cursor:pointer;text-decoration:underline;">Rate</button>
-    </div>
-  `;
-
+    </div>`;
   card.querySelector(".feedback-btn").addEventListener("click", () => openModal(p.id));
   return card;
 }
 
 async function fetchAvgRating(productId) {
   try {
-    console.log(`Fetching reviews for product ${productId}...`);
-    const response = await fetch(`/.netlify/functions/getReviews?productId=${productId}`);
-    
-    if (!response.ok) {
-      console.warn(`Failed to fetch reviews for product ${productId}:`, response.status);
-      return 0;
-    }
-    
-    const reviews = await response.json();
-    console.log(`Reviews for product ${productId}:`, reviews);
-    
-    if (!Array.isArray(reviews) || !reviews.length) {
-      return 0;
-    }
-    
-    const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
-    console.log(`Calculated average for product ${productId}:`, avg);
-    return avg;
-  } catch (error) {
-    console.warn(`Rating fetch error for product ${productId}:`, error.message);
-    return 0;
-  }
+    const res = await fetch(`/.netlify/functions/getReviews?productId=${productId}`);
+    if (!res.ok) return 0;
+    const reviews = await res.json();
+    if (!reviews.length) return 0;
+    return reviews.reduce((sum,r)=>sum+r.rating,0)/reviews.length;
+  } catch { return 0; }
 }
 
 function generateStars(rating) {
-  let html = "";
-  const fullStars = Math.floor(rating);
-  const hasHalfStar = rating % 1 >= 0.5;
-  
-  for (let i = 1; i <= 5; i++) {
-    if (i <= fullStars) {
-      html += '<span class="star">★</span>';
-    } else if (i === fullStars + 1 && hasHalfStar) {
-      html += '<span class="star">★</span>';
-    } else {
-      html += '<span class="star" style="color:#ccc;">★</span>';
-    }
-  }
+  let html="", full=Math.floor(rating), half=rating%1>=0.5;
+  for(let i=1;i<=5;i++) html+=i<=full||i===full+1&&half?'<span class="star">★</span>':'<span class="star" style="color:#ccc;">★</span>';
   return html;
 }
 
 function openModal(id) {
-  const product = products.find(p => p.id === id);
-  if (!product) return;
-  
-  currentProductId = id;
-  document.getElementById("modal-product-name").textContent = `Rate: ${product.name}`;
-  document.getElementById("product-id").value = id;
-  selectedRating = 0;
-  document.getElementById("rating-value").value = "";
-  document.getElementById("user-name").value = "";
-  document.getElementById("comment").value = "";
+  const p=products.find(p=>p.id===id);
+  if(!p)return;
+  currentProductId=id;
+  document.getElementById("modal-product-name").textContent=`Rate: ${p.name}`;
+  document.getElementById("product-id").value=id;
+  selectedRating=0;
+  document.getElementById("rating-value").value="";
+  document.getElementById("user-name").value="";
+  document.getElementById("comment").value="";
   highlightStars(0);
-  
-  document.getElementById("feedback-modal").style.display = "flex";
+  document.getElementById("feedback-modal").style.display="flex";
 }
 
 function closeModal() {
-  document.getElementById("feedback-modal").style.display = "none";
-  currentProductId = null;
+  document.getElementById("feedback-modal").style.display="none";
+  currentProductId=null;
 }
 
 function selectRating(star) {
-  selectedRating = parseInt(star.dataset.value);
-  document.getElementById("rating-value").value = selectedRating;
+  selectedRating=parseInt(star.dataset.value);
+  document.getElementById("rating-value").value=selectedRating;
   highlightStars(selectedRating);
 }
 
 function highlightStars(rating) {
-  document.querySelectorAll("#rating-stars .star").forEach((star, index) => {
-    star.style.color = index < rating ? "#ffc107" : "#ccc";
-  });
+  document.querySelectorAll("#rating-stars .star").forEach((s,i)=>s.style.color=i<rating?"#ffc107":"#ccc");
 }
 
 function filterProducts() {
-  const search = document.getElementById("search-input").value.toLowerCase();
-  const category = document.getElementById("category-filter").value;
-
-  const filtered = products.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(search) || 
-                         p.description.toLowerCase().includes(search);
-    const matchesCategory = !category || p.category === category;
-    
-    return matchesSearch && matchesCategory;
-  });
-
-  displayProducts(filtered);
+  const search=document.getElementById("search-input").value.toLowerCase();
+  const category=document.getElementById("category-filter").value;
+  displayProducts(products.filter(p=>(p.name.toLowerCase().includes(search)||p.description.toLowerCase().includes(search))&&(!category||p.category===category)));
 }
 
 function toggleTheme() {
   document.body.classList.toggle("dark-mode");
-  const isDark = document.body.classList.contains("dark-mode");
-  localStorage.setItem("darkMode", isDark);
-  document.getElementById("theme-toggle").textContent = isDark ? "Light Mode" : "Dark Mode";
+  const dark=document.body.classList.contains("dark-mode");
+  localStorage.setItem("darkMode",dark);
+  document.getElementById("theme-toggle").textContent=dark?"Light Mode":"Dark Mode";
 }
 
 async function submitFeedback(e) {
   e.preventDefault();
-  
-  const submitBtn = document.getElementById("submit-review-btn");
-  const submitText = document.getElementById("submit-text");
-  const submitLoading = document.getElementById("submit-loading");
-  
-  // Mostrar loading
-  submitText.style.display = 'none';
-  submitLoading.style.display = 'inline';
-  submitBtn.disabled = true;
+  const btn=document.getElementById("submit-review-btn");
+  const txt=document.getElementById("submit-text");
+  const load=document.getElementById("submit-loading");
+  txt.style.display='none';
+  load.style.display='inline';
+  btn.disabled=true;
 
-  const id = document.getElementById("product-id").value;
-  const user = document.getElementById("user-name").value.trim();
-  const rating = parseInt(document.getElementById("rating-value").value);
-  const comment = document.getElementById("comment").value.trim();
+  const id=document.getElementById("product-id").value;
+  const user=document.getElementById("user-name").value.trim();
+  const rating=parseInt(document.getElementById("rating-value").value);
+  const comment=document.getElementById("comment").value.trim();
 
-  if (!id || !user || !rating || !comment) {
-    alert("Please fill all fields.");
-    resetSubmitButton(submitBtn, submitText, submitLoading);
-    return;
-  }
-
-  if (rating < 1 || rating > 5) {
-    alert("Please select a rating between 1 and 5 stars.");
-    resetSubmitButton(submitBtn, submitText, submitLoading);
-    return;
-  }
+  if(!id||!user||!rating||!comment||rating<1||rating>5){alert("Please fill all fields correctly.");resetSubmitButton(btn,txt,load);return;}
 
   try {
-    // Executar reCAPTCHA v3
-    const token = await executeRecaptcha('submit_review');
-    
-    // Verificar o token do reCAPTCHA
-    const isValidRecaptcha = await verifyRecaptcha(token);
-    if (!isValidRecaptcha) {
-      alert("Security verification failed. Please try again.");
-      resetSubmitButton(submitBtn, submitText, submitLoading);
-      return;
-    }
-
-    console.log('Submitting review to Neon...', { id, user, rating, comment });
-    const response = await fetch(`/.netlify/functions/addReview`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        productId: id, 
-        userName: user, 
-        rating, 
-        comment 
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
-    }
-
-    const result = await response.json();
-    console.log('Review submitted successfully:', result);
-
+    const token=await executeRecaptcha('submit_review');
+    const valid=await verifyRecaptcha(token);
+    if(!valid){alert("Security verification failed");resetSubmitButton(btn,txt,load);return;}
+    const res=await fetch(`/.netlify/functions/addReview`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({productId:id,userName:user,rating,comment})});
+    if(!res.ok){const t=await res.text();throw new Error(t);}
+    await res.json();
     closeModal();
-    // Recarregar os produtos para atualizar as avaliações
     await loadProducts();
     alert("Review submitted successfully!");
-    
-  } catch (err) {
-    console.error("Submit error:", err);
-    alert("Error submitting review: " + err.message);
-  } finally {
-    resetSubmitButton(submitBtn, submitText, submitLoading);
-  }
+  } catch(err){alert("Error submitting review: "+err.message);}
+  finally{resetSubmitButton(btn,txt,load);}
 }
 
-function resetSubmitButton(submitBtn, submitText, submitLoading) {
-  submitText.style.display = 'inline';
-  submitLoading.style.display = 'none';
-  submitBtn.disabled = false;
+function resetSubmitButton(btn,txt,load){txt.style.display='inline';load.style.display='none';btn.disabled=false;}
+
+function populateCategories(products){
+  const select=document.getElementById("category-filter");
+  const cats=[...new Set(products.map(p=>p.category))].sort();
+  select.innerHTML='<option value="">All categories</option>';
+  cats.forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;select.appendChild(o);});
 }
-
-function populateCategories(products) {
-  const select = document.getElementById("category-filter");
-  const categories = [...new Set(products.map(p => p.category))].sort();
-  
-  select.innerHTML = '<option value="">All categories</option>';
-  categories.forEach(cat => {
-    const option = document.createElement("option");
-    option.value = cat;
-    option.textContent = cat;
-    select.appendChild(option);
-  });
-}
-
-
