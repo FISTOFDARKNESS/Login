@@ -35,7 +35,6 @@ exports.handler = async (event) => {
       };
     }
 
-    // Verificar o token com o Google reCAPTCHA v3
     const secretKey = '6LdvNN8rAAAAACsHw91wyveLBTQYnFqeqkHsOFTZ';
     const verificationUrl = `https://www.google.com/recaptcha/api/siteverify`;
     
