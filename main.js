@@ -1,5 +1,5 @@
 let products = [], currentProductId = null, selectedRating = 0;
-const SITE_KEY = '6LdOEdgrAAAAAN7VCLzmZj1ilE0frmol09Hfd-4V';
+const SITE_KEY = '6LdvNN8rAAAAADmepCKuP7jeUpwOdtrF8K-4X5R6';
 
 document.addEventListener("DOMContentLoaded", async () => {
   // Theme setup
@@ -376,4 +376,5 @@ function populateCategories(products) {
     select.appendChild(option);
   });
 }
+
 
