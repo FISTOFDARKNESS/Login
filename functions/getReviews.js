@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 
 export async function handler(event, context) {
-  // Handle CORS
+
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -27,8 +27,6 @@ export async function handler(event, context) {
         body: JSON.stringify({ error: "productId is required" })
       };
     }
-
-    // ✅ COLOCA A SUA CONNECTION STRING AQUI DIRETAMENTE
     const connectionString = "postgresql://neondb_owner:npg_mgw4DTLjik8l@ep-holy-darkness-aevwosmo-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require";
     
     const sql = neon(connectionString);
@@ -63,5 +61,6 @@ export async function handler(event, context) {
     };
   }
 }
+
 
 
