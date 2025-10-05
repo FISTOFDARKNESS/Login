@@ -814,22 +814,9 @@ document.addEventListener('DOMContentLoaded', function() {
       window.location.reload();
     }
   }, 500);
-
-  let devtools = {open: false};
-  setInterval(function() {
-    let threshold = 160;
-    if (window.outerHeight - window.innerHeight > threshold || 
-        window.outerWidth - window.innerWidth > threshold) {
-      if (!devtools.open) {
-        devtools.open = true;
-        document.body.innerHTML = '<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;color:red;">Stop Trying Use Develper Tool or We gonna ban your IP, your Ip is already sended to us</div>';
-      }
-    } else {
-      devtools.open = false;
-    }
-  }, 500);
 });
 </script>
 </body>
 </html>
+
 
