@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#000000"/>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,7 +12,8 @@
 <title>Product Catalog</title>
 <script src="https://www.google.com/recaptcha/api.js?render=6LdvNN8rAAAAADmepCKuP7jeUpwOdtrF8K-4X5R6"></script>
 <style>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 :root {
   --bg: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   --bg-solid: #f8fafc;
@@ -311,6 +313,7 @@ main {
   border: 1px solid var(--border);
   position: relative;
 }
+
 .product-card::before {
   content: '';
   position: absolute;
@@ -811,5 +814,6 @@ img {
   </div>
 </div>
 <script src="main.js"></script>
+</script>
 </body>
 </html>
