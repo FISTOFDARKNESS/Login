@@ -197,9 +197,55 @@ h1 {
   overflow: hidden;
 }
 
+.filter-select { 
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 0.75rem 2.8rem 0.75rem 1rem;
+  border-radius: 12px; 
+  border: 1px solid var(--border); 
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--fg); 
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  position: relative;
+  box-shadow: var(--shadow);
+}
+
+.filter-select::after {
+  content: "▾";
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--secondary);
+  font-size: 0.9rem;
+}
+
 .filter-select:hover {
   background: var(--hover);
   border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+.filter-select option {
+  background: var(--bg-solid);
+  color: var(--fg);
+  border: none;
+  padding: 1rem;
+  font-weight: 500;
 }
 
 .theme-toggle { 
@@ -764,5 +810,6 @@ img {
 </script>
 </body>
 </html>
+
 
 
