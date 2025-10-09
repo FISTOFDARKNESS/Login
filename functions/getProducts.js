@@ -1,4 +1,4 @@
-Qimport { neon } from '@neondatabase/serverless';
+import { neon } from '@neondatabase/serverless';
 
 export async function handler(event, context) {
   if (event.httpMethod === 'OPTIONS') {
@@ -47,6 +47,7 @@ export async function handler(event, context) {
     };
   }
 }
+
 
 
 
