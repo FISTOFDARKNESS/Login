@@ -1,7 +1,6 @@
-import { neon } from '@neondatabase/serverless';
+Qimport { neon } from '@neondatabase/serverless';
 
 export async function handler(event, context) {
-  // Handle CORS
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -15,7 +14,6 @@ export async function handler(event, context) {
   }
 
   try {
-    // ✅ COLOCA A SUA CONNECTION STRING AQUI DIRETAMENTE
     const connectionString = "postgresql://neondb_owner:npg_mgw4DTLjik8l@ep-holy-darkness-aevwosmo-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require";
     
     const sql = neon(connectionString);
@@ -23,7 +21,7 @@ export async function handler(event, context) {
     const products = await sql`
       SELECT id, name, category, description, image, link
       FROM products
-      ORDER BY name
+      ORDER BY id
     `;
 
     return {
@@ -49,5 +47,6 @@ export async function handler(event, context) {
     };
   }
 }
+
 
 
