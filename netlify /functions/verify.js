@@ -1,36 +1,24 @@
-import crypto from "crypto";
-
-const tokens = global.tokens || (global.tokens = {});
-
 export async function handler(event) {
-  const token = event.queryStringParameters?.token;
 
-  if (!token || !tokens[token]) {
-    return { statusCode: 403, body: "Acesso negado" };
-  }
-
-  if (tokens[token].used) {
-    return { statusCode: 403, body: "Token já usado" };
-  }
-
-  // expira em 5 minutos
-  if (Date.now() - tokens[token].createdAt > 5 * 60 * 1000) {
-    return { statusCode: 403, body: "Token expirado" };
-  }
-
-  // proteção extra
+  // BLOQUEIA LINK DIRETO
   const referer = event.headers.referer || "";
   if (!referer.includes("work.ink")) {
-    return { statusCode: 403, body: "Bypass detectado" };
+    return {
+      statusCode: 403,
+      body: "Bypass detectado"
+    };
   }
 
-  tokens[token].used = true;
-
-  const key = "KEY-" + crypto.randomBytes(8).toString("hex");
+  // GERA KEY
+  const key =
+    "KEY-" +
+    Math.random().toString(36).substring(2, 10).toUpperCase();
 
   return {
     statusCode: 200,
-    headers: { "Content-Type": "text/plain" },
-    body: `Sua key:\n${key}`
+    headers: {
+      "Content-Type": "text/plain"
+    },
+    body: `SUA KEY:\n\n${key}`
   };
 }
